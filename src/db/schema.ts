@@ -7,7 +7,9 @@ import {
   pgEnum,
   uuid,
   uniqueIndex,
+  jsonb,
 } from "drizzle-orm/pg-core";
+import type { IspPhoneTreeConfig } from "@/lib/phone-tree-types";
 
 // ============ BetterAuth Required Tables ============
 
@@ -97,6 +99,20 @@ export const issueCategory = pgTable("issue_category", {
   sortOrder: integer("sort_order").notNull().default(0),
 }, (table) => [
   uniqueIndex("issue_category_isp_slug_idx").on(table.ispId, table.slug),
+]);
+
+export const ispPhoneTree = pgTable("isp_phone_tree", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  ispId: uuid("isp_id")
+    .notNull()
+    .references(() => isp.id),
+  version: integer("version").notNull().default(1),
+  tree: jsonb("tree").notNull().$type<IspPhoneTreeConfig>(),
+  notes: text("notes"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("isp_phone_tree_isp_idx").on(table.ispId),
 ]);
 
 export const call = pgTable("call", {
