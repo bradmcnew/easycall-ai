@@ -16,9 +16,9 @@
 ### Call Handling
 
 - [x] **CALL-01**: System places outbound call to selected ISP's customer service number via Vapi AI
-- [ ] **CALL-02**: AI navigates ISP phone tree using DTMF tones and speech based on selected issue category
+- [x] **CALL-02**: AI navigates ISP phone tree using DTMF tones and speech based on selected issue category
 - [x] **CALL-03**: AI waits on hold with extended silence timeout (up to 1 hour) without disconnecting
-- [ ] **CALL-04**: AI detects when a live human agent picks up (via speech detection, distinguishing from recordings/hold interruptions)
+- [x] **CALL-04**: AI detects when a live human agent picks up (via speech detection, distinguishing from recordings/hold interruptions)
 
 ### Transfer & Bridging
 
@@ -66,9 +66,9 @@
 | ISP-01 | Phase 1 | 01-03 | Complete |
 | ISP-02 | Phase 1 | 01-03 | Complete |
 | CALL-01 | Phase 2 | 02-01 | Complete |
-| CALL-02 | Phase 3 | -- | pending |
+| CALL-02 | Phase 3 | 03-02 | Complete |
 | CALL-03 | Phase 2 | 02-01 | Complete |
-| CALL-04 | Phase 3 | -- | pending |
+| CALL-04 | Phase 3 | 03-02 | Complete |
 | XFER-01 | Phase 4 | -- | pending |
 | XFER-02 | Phase 4 | -- | pending |
 | XFER-03 | Phase 4 | -- | pending |
