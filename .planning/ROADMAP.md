@@ -33,7 +33,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01-PLAN.md -- Project init, database schema, migrations, and ISP seed data
-- [ ] 01-02-PLAN.md -- Phone auth flow (BetterAuth + Twilio Verify, phone input, OTP verification)
+- [x] 01-02-PLAN.md -- Phone auth flow (BetterAuth + Twilio Verify, phone input, OTP verification)
 - [ ] 01-03-PLAN.md -- ISP selection grid, issue category picker, confirmation page, step indicator
 
 ### Phase 2: Outbound Calling & Live Status
@@ -91,7 +91,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|---------------|--------|-----------|
-| 1. Foundation | 1/3 | In Progress | - |
+| 1. Foundation | 2/3 | In Progress | - |
 | 2. Outbound Calling & Live Status | 0/3 | Not started | - |
 | 3. IVR Navigation & Human Detection | 0/3 | Not started | - |
 | 4. Transfer & Bridging | 0/3 | Not started | - |
