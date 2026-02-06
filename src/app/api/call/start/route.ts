@@ -123,26 +123,6 @@ export async function POST(req: Request) {
                 content: systemPrompt,
               },
             ],
-          },
-          voice: { provider: "vapi", voiceId: "Elliot" },
-          transcriber: { provider: "deepgram", model: "nova-2", language: "en" },
-          firstMessage: " ",
-          firstMessageMode: "assistant-speaks-first",
-          // silenceTimeoutSeconds is accepted by the API but not typed in SDK v0.11
-          ...({ silenceTimeoutSeconds: 3600 } as Record<string, unknown>),
-          // Wait 1.5s before speaking to avoid interrupting IVR menus
-          ...({ startSpeakingPlan: { waitSeconds: 1.5 } } as Record<string, unknown>),
-          maxDurationSeconds: 2700,
-          serverMessages: ["status-update", "end-of-call-report", "hang", "tool-calls", "transcript"],
-          server: {
-            url: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/vapi`,
-            timeoutSeconds: 20,
-            headers: {
-              "x-vapi-secret": process.env.VAPI_WEBHOOK_SECRET!,
-            },
-          },
-          // tools is accepted by the API but not typed in SDK v0.11 CreateAssistantDto
-          ...({
             tools: [
               { type: "dtmf" },
               {
@@ -195,8 +175,25 @@ export async function POST(req: Request) {
                   },
                 },
               },
-            ],
-          } as Record<string, unknown>),
+            ] as any,
+          },
+          voice: { provider: "vapi", voiceId: "Elliot" },
+          transcriber: { provider: "deepgram", model: "nova-2", language: "en" },
+          firstMessage: " ",
+          firstMessageMode: "assistant-speaks-first",
+          // silenceTimeoutSeconds is accepted by the API but not typed in SDK v0.11
+          ...({ silenceTimeoutSeconds: 3600 } as Record<string, unknown>),
+          // Wait 1.5s before speaking to avoid interrupting IVR menus
+          ...({ startSpeakingPlan: { waitSeconds: 1.5 } } as Record<string, unknown>),
+          maxDurationSeconds: 2700,
+          serverMessages: ["status-update", "end-of-call-report", "hang", "tool-calls", "transcript"],
+          server: {
+            url: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/vapi`,
+            timeoutSeconds: 20,
+            headers: {
+              "x-vapi-secret": process.env.VAPI_WEBHOOK_SECRET!,
+            },
+          },
         },
       });
 
