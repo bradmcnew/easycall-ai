@@ -29,12 +29,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User can select an ISP from a branded list of major US providers (Comcast, AT&T, Spectrum, Verizon, Cox, CenturyLink)
   4. User can select an issue category (billing, technical support, cancellation, general inquiry) after choosing their ISP
   5. Database schema for users, ISPs, calls, and call events exists and is migrated
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
-- [ ] 01-03: TBD
+- [ ] 01-01-PLAN.md -- Project init, database schema, migrations, and ISP seed data
+- [ ] 01-02-PLAN.md -- Phone auth flow (BetterAuth + Twilio Verify, phone input, OTP verification)
+- [ ] 01-03-PLAN.md -- ISP selection grid, issue category picker, confirmation page, step indicator
 
 ### Phase 2: Outbound Calling & Live Status
 **Goal**: System can place outbound calls to ISPs via Vapi, survive extended hold times, and users see real-time call status in their browser
@@ -91,7 +91,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|---------------|--------|-----------|
-| 1. Foundation | 0/3 | Not started | - |
+| 1. Foundation | 0/3 | Planned | - |
 | 2. Outbound Calling & Live Status | 0/3 | Not started | - |
 | 3. IVR Navigation & Human Detection | 0/3 | Not started | - |
 | 4. Transfer & Bridging | 0/3 | Not started | - |
