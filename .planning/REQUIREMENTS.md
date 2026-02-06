@@ -1,4 +1,4 @@
-# Requirements — EasyCallAI
+# Requirements -- EasyCallAI
 
 ## v1 Requirements
 
@@ -48,11 +48,11 @@
 
 ## Out of Scope
 
-- Non-ISP companies — ISP-focused for MVP
-- Mobile native app — web-first
-- Pay-per-call / billing — free MVP
-- Multi-attempt callback retry — single attempt, then hang up
-- Call recording playback — may store for debugging but not user-facing
+- Non-ISP companies -- ISP-focused for MVP
+- Mobile native app -- web-first
+- Pay-per-call / billing -- free MVP
+- Multi-attempt callback retry -- single attempt, then hang up
+- Call recording playback -- may store for debugging but not user-facing
 
 ---
 
@@ -60,20 +60,20 @@
 
 | REQ-ID | Phase | Plan | Status |
 |--------|-------|------|--------|
-| AUTH-01 | — | — | pending |
-| AUTH-02 | — | — | pending |
-| AUTH-03 | — | — | pending |
-| ISP-01 | — | — | pending |
-| ISP-02 | — | — | pending |
-| CALL-01 | — | — | pending |
-| CALL-02 | — | — | pending |
-| CALL-03 | — | — | pending |
-| CALL-04 | — | — | pending |
-| XFER-01 | — | — | pending |
-| XFER-02 | — | — | pending |
-| XFER-03 | — | — | pending |
-| XFER-04 | — | — | pending |
-| STATUS-01 | — | — | pending |
+| AUTH-01 | Phase 1 | -- | pending |
+| AUTH-02 | Phase 1 | -- | pending |
+| AUTH-03 | Phase 1 | -- | pending |
+| ISP-01 | Phase 1 | -- | pending |
+| ISP-02 | Phase 1 | -- | pending |
+| CALL-01 | Phase 2 | -- | pending |
+| CALL-02 | Phase 3 | -- | pending |
+| CALL-03 | Phase 2 | -- | pending |
+| CALL-04 | Phase 3 | -- | pending |
+| XFER-01 | Phase 4 | -- | pending |
+| XFER-02 | Phase 4 | -- | pending |
+| XFER-03 | Phase 4 | -- | pending |
+| XFER-04 | Phase 4 | -- | pending |
+| STATUS-01 | Phase 2 | -- | pending |
 
 ---
-*Last updated: 2026-02-06 after requirements definition*
+*Last updated: 2026-02-06 after roadmap creation*
