@@ -8,14 +8,14 @@ import { callChannel } from "@/lib/call-channel";
 function mapVapiStatusToCallStatus(
   vapiStatus: string,
   endedReason?: string
-): "pending" | "dialing" | "on_hold" | "completed" | "failed" {
+): "pending" | "dialing" | "navigating" | "on_hold" | "completed" | "failed" {
   switch (vapiStatus) {
     case "queued":
       return "pending";
     case "ringing":
       return "dialing";
     case "in-progress":
-      return "on_hold";
+      return "navigating"; // Phase 3: call starts with IVR navigation, not on_hold
     case "ended": {
       const failedReasons = [
         "customer-busy",
@@ -36,14 +36,14 @@ function mapVapiStatusToCallStatus(
 // Map Vapi status to call_event_type enum
 function mapVapiStatusToEventType(
   vapiStatus: string
-): "created" | "dialing" | "on_hold" | "completed" | "failed" {
+): "created" | "dialing" | "ivr_navigation" | "on_hold" | "completed" | "failed" {
   switch (vapiStatus) {
     case "queued":
       return "created";
     case "ringing":
       return "dialing";
     case "in-progress":
-      return "on_hold";
+      return "ivr_navigation"; // Phase 3: call starts with IVR navigation
     case "ended":
       return "completed";
     default:
@@ -202,6 +202,128 @@ export async function POST(req: Request) {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
+    }
+
+    // Handle tool-calls messages (human_detected, navigation_status)
+    if (message.type === "tool-calls") {
+      const vapiCallId = message.call?.id as string | undefined;
+      if (!vapiCallId) return new Response("OK", { status: 200 });
+
+      const callRecord = await db.query.call.findFirst({
+        where: eq(call.vapiCallId, vapiCallId),
+      });
+      if (!callRecord) return new Response("OK", { status: 200 });
+
+      const results = [];
+      for (const toolCall of message.toolCallList ?? []) {
+        const funcName = toolCall.function?.name ?? toolCall.name;
+        const params =
+          typeof toolCall.function?.arguments === "string"
+            ? JSON.parse(toolCall.function.arguments)
+            : toolCall.function?.arguments ?? toolCall.parameters ?? {};
+
+        if (funcName === "human_detected") {
+          // Update call status to agent_detected
+          await db
+            .update(call)
+            .set({ status: "agent_detected", updatedAt: new Date() })
+            .where(eq(call.id, callRecord.id));
+
+          await db.insert(callEvent).values({
+            callId: callRecord.id,
+            eventType: "agent_detected",
+            metadata: JSON.stringify({
+              confidence: params.confidence,
+              agentGreeting: params.agentGreeting,
+            }),
+          });
+
+          // Push prominent alert to browser
+          await pusherServer.trigger(
+            callChannel(callRecord.id),
+            "status-change",
+            {
+              status: "agent_detected",
+              timestamp: new Date().toISOString(),
+            }
+          );
+
+          results.push({
+            toolCallId: toolCall.id,
+            result: "Human agent detected. Proceeding to transfer phase.",
+          });
+        } else if (funcName === "navigation_status") {
+          const navStatus = params.status;
+          const detail = params.detail;
+
+          // Map navigation status to call status
+          const statusMap: Record<string, string> = {
+            navigating: "navigating",
+            reached_queue: "on_hold",
+            on_hold: "on_hold",
+            stuck: "navigating",
+          };
+          const newStatus = statusMap[navStatus] ?? "navigating";
+
+          await db
+            .update(call)
+            .set({
+              status: newStatus as typeof callRecord.status,
+              updatedAt: new Date(),
+            })
+            .where(eq(call.id, callRecord.id));
+
+          await db.insert(callEvent).values({
+            callId: callRecord.id,
+            eventType: "ivr_navigation",
+            metadata: JSON.stringify({ status: navStatus, detail }),
+          });
+
+          await pusherServer.trigger(
+            callChannel(callRecord.id),
+            "status-change",
+            {
+              status: newStatus,
+              detail,
+              timestamp: new Date().toISOString(),
+            }
+          );
+
+          results.push({
+            toolCallId: toolCall.id,
+            result: "Status update received.",
+          });
+        }
+      }
+
+      return Response.json({ results });
+    }
+
+    // Handle transcript messages (forward final transcripts to Pusher)
+    if (message.type === "transcript") {
+      const vapiCallId = message.call?.id as string | undefined;
+      const transcriptType = message.transcriptType; // "partial" or "final"
+      const role = message.role; // "user" (ISP side) or "assistant" (our AI)
+      const text = message.transcript;
+
+      // Only forward final transcripts to avoid flooding Pusher
+      if (!vapiCallId || transcriptType !== "final") {
+        return new Response("OK", { status: 200 });
+      }
+
+      const callRecord = await db.query.call.findFirst({
+        where: eq(call.vapiCallId, vapiCallId),
+      });
+      if (!callRecord) return new Response("OK", { status: 200 });
+
+      // Push transcript to browser (no DB storage -- transient display data)
+      await pusherServer.trigger(callChannel(callRecord.id), "transcript", {
+        role,
+        text,
+        timestamp: new Date().toISOString(),
+      });
+
+      return new Response("OK", { status: 200 });
     }
 
     // Unknown message types -- return 200 (Vapi retries on non-200)
