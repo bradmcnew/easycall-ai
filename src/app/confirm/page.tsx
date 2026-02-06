@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { StartCallButton } from "@/components/start-call-button";
 
 interface ConfirmPageProps {
   searchParams: Promise<{ isp?: string; category?: string; note?: string }>;
@@ -131,14 +131,11 @@ export default async function ConfirmPage({ searchParams }: ConfirmPageProps) {
         </CardContent>
       </Card>
 
-      <div className="space-y-2">
-        <Button disabled className="w-full" size="lg">
-          Start Call
-        </Button>
-        <p className="text-center text-xs text-muted-foreground">
-          Call placement coming soon in the next update
-        </p>
-      </div>
+      <StartCallButton
+        ispId={ispRecord.id}
+        issueCategoryId={categoryRecord.id}
+        userNote={note ? decodeURIComponent(note) : undefined}
+      />
     </div>
   );
 }
