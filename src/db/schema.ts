@@ -113,6 +113,8 @@ export const call = pgTable("call", {
   userNote: text("user_note"),
   status: callStatusEnum("status").notNull().default("pending"),
   vapiCallId: text("vapi_call_id"),
+  vapiControlUrl: text("vapi_control_url"),
+  endedReason: text("ended_reason"),
   startedAt: timestamp("started_at"),
   endedAt: timestamp("ended_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
