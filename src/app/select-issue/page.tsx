@@ -1,0 +1,55 @@
+import { redirect } from "next/navigation";
+import { db } from "@/db";
+import { isp, issueCategory } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { SelectIssueForm } from "./select-issue-form";
+
+interface SelectIssuePageProps {
+  searchParams: Promise<{ isp?: string }>;
+}
+
+export default async function SelectIssuePage({ searchParams }: SelectIssuePageProps) {
+  const params = await searchParams;
+  const ispSlug = params.isp;
+
+  if (!ispSlug) {
+    redirect("/select-isp");
+  }
+
+  const ispRecord = await db.query.isp.findFirst({
+    where: eq(isp.slug, ispSlug),
+  });
+
+  if (!ispRecord) {
+    redirect("/select-isp");
+  }
+
+  const categories = await db
+    .select()
+    .from(issueCategory)
+    .where(eq(issueCategory.ispId, ispRecord.id))
+    .orderBy(issueCategory.sortOrder);
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold tracking-tight">
+          {ispRecord.name} &mdash; What do you need help with?
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Select the issue that best describes your problem
+        </p>
+      </div>
+
+      <SelectIssueForm
+        ispSlug={ispRecord.slug}
+        categories={categories.map((c) => ({
+          id: c.id,
+          slug: c.slug,
+          label: c.label,
+          description: c.description,
+        }))}
+      />
+    </div>
+  );
+}
