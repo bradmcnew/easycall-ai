@@ -45,12 +45,12 @@ Plans:
   2. The call stays connected during extended hold periods (up to 45 minutes) without timing out or disconnecting
   3. User sees live call status updates in the browser (dialing, on hold, call ended) that reflect actual call state within seconds
   4. Vapi webhook events are received, processed, and persisted as call state transitions in the database
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
-- [ ] 02-03: TBD
+- [ ] 02-01-PLAN.md -- Schema migration, Vapi/Pusher library setup, call start API, confirm page wiring
+- [ ] 02-02-PLAN.md -- Vapi webhook handler, Pusher auth, call cancel and active call check routes
+- [ ] 02-03-PLAN.md -- Call status page with live Pusher updates, hold timer, cancel, summary card, active call redirect
 
 ### Phase 3: IVR Navigation & Human Detection
 **Goal**: AI autonomously navigates ISP phone trees to reach the correct department queue and reliably detects when a live human agent picks up
