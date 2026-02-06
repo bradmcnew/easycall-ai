@@ -6,6 +6,7 @@ import {
   integer,
   pgEnum,
   uuid,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 // ============ BetterAuth Required Tables ============
@@ -94,7 +95,9 @@ export const issueCategory = pgTable("issue_category", {
   label: text("label").notNull(),
   description: text("description"),
   sortOrder: integer("sort_order").notNull().default(0),
-});
+}, (table) => [
+  uniqueIndex("issue_category_isp_slug_idx").on(table.ispId, table.slug),
+]);
 
 export const call = pgTable("call", {
   id: uuid("id").primaryKey().defaultRandom(),

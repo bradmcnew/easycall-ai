@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "issue_category_isp_slug_idx" ON "issue_category" USING btree ("isp_id","slug");
