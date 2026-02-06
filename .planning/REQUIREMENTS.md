@@ -60,11 +60,11 @@
 
 | REQ-ID | Phase | Plan | Status |
 |--------|-------|------|--------|
-| AUTH-01 | Phase 1 | -- | pending |
-| AUTH-02 | Phase 1 | -- | pending |
-| AUTH-03 | Phase 1 | -- | pending |
-| ISP-01 | Phase 1 | -- | pending |
-| ISP-02 | Phase 1 | -- | pending |
+| AUTH-01 | Phase 1 | 01-02 | Complete |
+| AUTH-02 | Phase 1 | 01-02 | Complete |
+| AUTH-03 | Phase 1 | 01-02 | Complete |
+| ISP-01 | Phase 1 | 01-03 | Complete |
+| ISP-02 | Phase 1 | 01-03 | Complete |
 | CALL-01 | Phase 2 | -- | pending |
 | CALL-02 | Phase 3 | -- | pending |
 | CALL-03 | Phase 2 | -- | pending |

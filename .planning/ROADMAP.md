@@ -12,7 +12,7 @@ EasyCallAI delivers an autonomous outbound phone call handler that navigates ISP
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - User auth via SMS OTP and ISP/issue selection UI
+- [x] **Phase 1: Foundation** - User auth via SMS OTP and ISP/issue selection UI
 - [ ] **Phase 2: Outbound Calling & Live Status** - Place calls to ISPs via Vapi, wait on hold, show real-time status in browser
 - [ ] **Phase 3: IVR Navigation & Human Detection** - AI navigates phone trees and detects when a live agent picks up
 - [ ] **Phase 4: Transfer & Bridging** - Stall agent, callback user, conference everyone in, AI drops off
@@ -34,7 +34,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01-PLAN.md -- Project init, database schema, migrations, and ISP seed data
 - [x] 01-02-PLAN.md -- Phone auth flow (BetterAuth + Twilio Verify, phone input, OTP verification)
-- [ ] 01-03-PLAN.md -- ISP selection grid, issue category picker, confirmation page, step indicator
+- [x] 01-03-PLAN.md -- ISP selection grid, issue category picker, confirmation page, step indicator
 
 ### Phase 2: Outbound Calling & Live Status
 **Goal**: System can place outbound calls to ISPs via Vapi, survive extended hold times, and users see real-time call status in their browser
@@ -91,7 +91,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|---------------|--------|-----------|
-| 1. Foundation | 2/3 | In Progress | - |
+| 1. Foundation | 3/3 | Complete | 2026-02-06 |
 | 2. Outbound Calling & Live Status | 0/3 | Not started | - |
 | 3. IVR Navigation & Human Detection | 0/3 | Not started | - |
 | 4. Transfer & Bridging | 0/3 | Not started | - |
