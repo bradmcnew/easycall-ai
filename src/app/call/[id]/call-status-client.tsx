@@ -23,6 +23,7 @@ import {
   Clock,
   WifiOff,
   AlertCircle,
+  ChevronDown,
 } from "lucide-react";
 
 // ---------- Types ----------
@@ -52,6 +53,14 @@ interface CallStatusClientProps {
   categorySlug: string;
 }
 
+// ---------- Transcript types ----------
+
+interface TranscriptLine {
+  role: "user" | "assistant";
+  text: string;
+  timestamp: string;
+}
+
 // ---------- Status display config ----------
 
 const STATUS_DISPLAY: Record<
@@ -68,15 +77,15 @@ const STATUS_DISPLAY: Record<
   },
   navigating: {
     label: "Navigating Menu",
-    description: "Working through the automated menu",
+    description: "AI is working through the phone menu to reach the right department",
   },
   on_hold: {
     label: "On Hold",
     description: "Waiting for an agent. We'll let you know when someone picks up.",
   },
   agent_detected: {
-    label: "Agent Found",
-    description: "A human agent has been detected",
+    label: "Agent Found!",
+    description: "A live agent has picked up the phone",
   },
   transferring: {
     label: "Transferring",
@@ -150,29 +159,25 @@ function getEndedReasonDisplay(reason: string | null): {
 type CallStep = {
   key: CallStatus;
   label: string;
-  phase3?: boolean; // grayed out for future phases
 };
 
 const CALL_STEPS: CallStep[] = [
   { key: "dialing", label: "Dialing" },
+  { key: "navigating", label: "Navigating Menu" },
   { key: "on_hold", label: "On Hold" },
-  { key: "navigating", label: "Navigating Menu", phase3: true },
-  { key: "agent_detected", label: "Agent Found", phase3: true },
+  { key: "agent_detected", label: "Agent Found" },
   { key: "completed", label: "Complete" },
 ];
 
 function getStepState(
   stepKey: CallStatus,
-  currentStatus: CallStatus,
-  isPhase3: boolean
-): "completed" | "current" | "upcoming" | "disabled" {
-  if (isPhase3) return "disabled";
-
+  currentStatus: CallStatus
+): "completed" | "current" | "upcoming" {
   const stepOrder: CallStatus[] = [
     "pending",
     "dialing",
-    "on_hold",
     "navigating",
+    "on_hold",
     "agent_detected",
     "transferring",
     "connected",
@@ -247,12 +252,16 @@ export function CallStatusClient({
   const [isConnected, setIsConnected] = useState(true);
   const [isCancelling, setIsCancelling] = useState(false);
   const [holdSeconds, setHoldSeconds] = useState(0);
+  const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>([]);
+  const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
+  const [navDetail, setNavDetail] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const transcriptEndRef = useRef<HTMLDivElement>(null);
 
   // ---------- Hold timer ----------
 
   useEffect(() => {
-    if (status === "on_hold" && startedAt) {
+    if ((status === "on_hold" || status === "navigating") && startedAt) {
       // Calculate initial elapsed time from when call started
       const startTime = new Date(startedAt).getTime();
       const now = Date.now();
@@ -268,7 +277,7 @@ export function CallStatusClient({
       };
     }
 
-    // Clear timer when not on hold
+    // Clear timer when not on hold or navigating
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -283,8 +292,9 @@ export function CallStatusClient({
 
     channel.bind(
       "status-change",
-      (data: { status: string; timestamp: string }) => {
+      (data: { status: string; detail?: string; timestamp: string }) => {
         setStatus(data.status as CallStatus);
+        if (data.detail) setNavDetail(data.detail);
       }
     );
 
@@ -296,6 +306,10 @@ export function CallStatusClient({
         if (data.endedAt) setEndedAt(data.endedAt);
       }
     );
+
+    channel.bind("transcript", (data: TranscriptLine) => {
+      setTranscriptLines((prev) => [...prev, data]);
+    });
 
     // Connection state monitoring
     pusher.connection.bind(
@@ -310,6 +324,14 @@ export function CallStatusClient({
       pusher.unsubscribe(callChannel(callId));
     };
   }, [callId]);
+
+  // ---------- Transcript auto-scroll ----------
+
+  useEffect(() => {
+    if (isTranscriptOpen && transcriptEndRef.current) {
+      transcriptEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [transcriptLines, isTranscriptOpen]);
 
   // ---------- Cancel handler ----------
 
@@ -380,10 +402,28 @@ export function CallStatusClient({
         </div>
       )}
 
+      {/* Agent Found animation */}
+      {status === "agent_detected" && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 rounded-xl border-2 border-green-500 bg-green-50 p-6 text-center dark:bg-green-950/30">
+          <div className="flex items-center justify-center gap-2">
+            <span className="relative flex h-4 w-4">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+              <span className="relative inline-flex h-4 w-4 rounded-full bg-green-500" />
+            </span>
+            <h2 className="text-xl font-bold text-green-700 dark:text-green-400">
+              Agent Found!
+            </h2>
+          </div>
+          <p className="mt-2 text-sm text-green-600 dark:text-green-500">
+            A live agent has picked up. Preparing to connect you...
+          </p>
+        </div>
+      )}
+
       {/* Status header */}
       <div className="text-center">
         <div className="flex items-center justify-center gap-2">
-          {isActive && (
+          {isActive && status !== "agent_detected" && (
             <span className="relative flex h-3 w-3">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
               <span className="relative inline-flex h-3 w-3 rounded-full bg-green-500" />
@@ -402,6 +442,9 @@ export function CallStatusClient({
         {description && (
           <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         )}
+        {status === "navigating" && navDetail && (
+          <p className="text-center text-xs text-muted-foreground">{navDetail}</p>
+        )}
       </div>
 
       {/* Step progression (only show during active call) */}
@@ -411,7 +454,7 @@ export function CallStatusClient({
           className="flex items-center justify-center gap-2"
         >
           {CALL_STEPS.map((step, i) => {
-            const state = getStepState(step.key, status, !!step.phase3);
+            const state = getStepState(step.key, status);
             return (
               <div key={step.key} className="flex items-center gap-2">
                 <div className="flex flex-col items-center gap-1">
@@ -422,9 +465,7 @@ export function CallStatusClient({
                         "h-4 w-4 bg-primary ring-2 ring-primary/30 ring-offset-2 ring-offset-background",
                       state === "completed" && "h-3 w-3 bg-primary",
                       state === "upcoming" &&
-                        "h-3 w-3 border-2 border-muted-foreground/30 bg-transparent",
-                      state === "disabled" &&
-                        "h-3 w-3 border-2 border-muted-foreground/10 bg-transparent"
+                        "h-3 w-3 border-2 border-muted-foreground/30 bg-transparent"
                     )}
                   />
                   <span
@@ -432,8 +473,7 @@ export function CallStatusClient({
                       "hidden text-[10px] md:block",
                       state === "current" && "font-medium text-foreground",
                       state === "completed" && "text-muted-foreground",
-                      state === "upcoming" && "text-muted-foreground/50",
-                      state === "disabled" && "text-muted-foreground/20"
+                      state === "upcoming" && "text-muted-foreground/50"
                     )}
                   >
                     {step.label}
@@ -455,8 +495,8 @@ export function CallStatusClient({
         </nav>
       )}
 
-      {/* Hold timer */}
-      {status === "on_hold" && (
+      {/* Hold / navigating timer */}
+      {(status === "on_hold" || status === "navigating") && (
         <div className="flex items-center justify-center gap-1.5 text-muted-foreground">
           <Clock className="h-3.5 w-3.5" />
           <span className="text-sm tabular-nums">{formatDuration(holdSeconds)}</span>
@@ -531,6 +571,44 @@ export function CallStatusClient({
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Collapsible transcript panel */}
+      {isActive && transcriptLines.length > 0 && (
+        <div className="space-y-2">
+          <button
+            onClick={() => setIsTranscriptOpen(!isTranscriptOpen)}
+            className="flex w-full items-center justify-between rounded-lg border px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/50"
+          >
+            <span>Live Transcript ({transcriptLines.length})</span>
+            <ChevronDown
+              className={cn(
+                "h-4 w-4 transition-transform",
+                isTranscriptOpen && "rotate-180"
+              )}
+            />
+          </button>
+          {isTranscriptOpen && (
+            <div className="max-h-48 overflow-y-auto rounded-lg border bg-muted/30 p-3 space-y-1.5">
+              {transcriptLines.map((line, i) => (
+                <div key={i} className="text-xs">
+                  <span
+                    className={cn(
+                      "font-medium",
+                      line.role === "assistant"
+                        ? "text-blue-600 dark:text-blue-400"
+                        : "text-muted-foreground"
+                    )}
+                  >
+                    {line.role === "assistant" ? "AI" : "Phone"}:
+                  </span>{" "}
+                  <span className="text-muted-foreground">{line.text}</span>
+                </div>
+              ))}
+              <div ref={transcriptEndRef} />
+            </div>
+          )}
+        </div>
       )}
 
       {/* Action buttons */}
