@@ -3,8 +3,9 @@ config({ path: ".env.local" });
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import { isp, issueCategory } from "./schema";
+import { isp, issueCategory, ispPhoneTree } from "./schema";
 import { ISP_DATA } from "../data/isps";
+import { PHONE_TREE_DATA } from "../data/phone-trees";
 
 async function seed() {
   const pool = new Pool({
@@ -62,7 +63,51 @@ async function seed() {
     totalCategories += ispData.categories.length;
   }
 
-  console.log(`Seeded ${ISP_DATA.length} ISPs and ${totalCategories} categories`);
+  // Seed phone tree data
+  let phoneTreeCount = 0;
+  for (const [slug, treeData] of Object.entries(PHONE_TREE_DATA)) {
+    // Look up the ISP ID by slug
+    const ispRecord = await db
+      .select({ id: isp.id })
+      .from(isp)
+      .where(eq(isp.slug, slug));
+
+    if (ispRecord.length === 0) {
+      console.warn(`Warning: ISP with slug "${slug}" not found, skipping phone tree`);
+      continue;
+    }
+
+    const ispId = ispRecord[0].id;
+
+    // Check if a phone tree already exists for this ISP
+    const existing = await db
+      .select({ id: ispPhoneTree.id, version: ispPhoneTree.version })
+      .from(ispPhoneTree)
+      .where(eq(ispPhoneTree.ispId, ispId));
+
+    if (existing.length > 0) {
+      // Update existing tree and increment version
+      await db
+        .update(ispPhoneTree)
+        .set({
+          tree: treeData,
+          version: existing[0].version + 1,
+          updatedAt: new Date(),
+        })
+        .where(eq(ispPhoneTree.id, existing[0].id));
+    } else {
+      // Insert new phone tree
+      await db.insert(ispPhoneTree).values({
+        ispId,
+        tree: treeData,
+        version: 1,
+      });
+    }
+
+    phoneTreeCount++;
+  }
+
+  console.log(`Seeded ${ISP_DATA.length} ISPs, ${totalCategories} categories, and ${phoneTreeCount} phone trees`);
 
   await pool.end();
 }
