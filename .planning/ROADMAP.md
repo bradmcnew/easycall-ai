@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - User auth via SMS OTP and ISP/issue selection UI
 - [x] **Phase 2: Outbound Calling & Live Status** - Place calls to ISPs via Vapi, wait on hold, show real-time status in browser
-- [ ] **Phase 3: IVR Navigation & Human Detection** - AI navigates phone trees and detects when a live agent picks up
+- [x] **Phase 3: IVR Navigation & Human Detection** - AI navigates phone trees and detects when a live agent picks up
 - [ ] **Phase 4: Transfer & Bridging** - Stall agent, callback user, conference everyone in, AI drops off
 
 ## Phase Details
@@ -63,9 +63,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 03-01-PLAN.md -- Phone tree data model, TypeScript types, DB migration, and seed data for 6 ISPs
-- [ ] 03-02-PLAN.md -- Prompt builder, enhanced Vapi assistant config (DTMF + function tools), expanded webhook handler
-- [ ] 03-03-PLAN.md -- Call status UI: live transcript panel, navigation status, agent-found animation
+- [x] 03-01-PLAN.md -- Phone tree data model, TypeScript types, DB migration, and seed data for 6 ISPs
+- [x] 03-02-PLAN.md -- Prompt builder, enhanced Vapi assistant config (DTMF + function tools), expanded webhook handler
+- [x] 03-03-PLAN.md -- Call status UI: live transcript panel, navigation status, agent-found animation
 
 ### Phase 4: Transfer & Bridging
 **Goal**: When a live agent picks up, the AI stalls them, calls the user back, conferences everyone together, and drops off -- completing the full product loop
@@ -93,5 +93,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 |-------|---------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-02-06 |
 | 2. Outbound Calling & Live Status | 3/3 | Complete | 2026-02-06 |
-| 3. IVR Navigation & Human Detection | 0/3 | Not started | - |
+| 3. IVR Navigation & Human Detection | 3/3 | Complete | 2026-02-06 |
 | 4. Transfer & Bridging | 0/3 | Not started | - |

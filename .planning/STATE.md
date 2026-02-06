@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-06)
 
 **Core value:** Users never sit on hold again. The AI handles the wait and gets them connected to a human agent ready to help.
-**Current focus:** Phase 3 in progress - IVR Navigation & Human Detection
+**Current focus:** Phase 3 complete - Ready for Phase 4 (Transfer & Bridging)
 
 ## Current Position
 
 Phase: 3 of 4 (IVR Navigation & Human Detection)
-Plan: 2 of 3 in Phase 3
-Status: In progress
-Last activity: 2026-02-06 - Completed 03-02-PLAN.md
+Plan: 3 of 3 in Phase 3
+Status: Phase complete
+Last activity: 2026-02-06 - Completed 03-03-PLAN.md
 
-Progress: [████████░░] 8/12 (67%)
+Progress: [█████████░] 9/12 (75%)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
+- Total plans completed: 9
 - Average duration: 5min
-- Total execution time: 0.6 hours
+- Total execution time: 0.7 hours
 
 **By Phase:**
 
@@ -29,10 +29,10 @@ Progress: [████████░░] 8/12 (67%)
 |-------|-------|-------|----------|
 | 1. Foundation | 3/3 | 14min | 5min |
 | 2. Outbound Calling | 3/3 | 18min | 6min |
-| 3. IVR Navigation | 2/3 | 6min | 3min |
+| 3. IVR Navigation | 3/3 | 11min | 4min |
 
 **Recent Trend:**
-- Last 5 plans: 4min, 8min, 3min, 3min
+- Last 5 plans: 4min, 8min, 3min, 3min, 5min
 - Trend: stable (~4min/plan)
 
 *Updated after each plan completion*
@@ -66,6 +66,8 @@ Recent decisions affecting current work:
 - in-progress Vapi status maps to navigating (not on_hold) for Phase 3 IVR navigation
 - Silent first message (space) lets IVR speak first without AI interruption
 - 1.5s startSpeakingPlan wait to avoid interrupting IVR menu options
+- Vapi SDK tools must be on model object, not assistant object (discovered during Phase 3 testing)
+- Transcript labels: AI for assistant role, Phone for user/IVR role
 
 ### Pending Todos
 
@@ -73,12 +75,11 @@ Recent decisions affecting current work:
 
 ### Blockers/Concerns
 
-- Human detection reliability is highest-risk unknown (Phase 3)
 - Agent hangup during transfer gap is critical risk (Phase 4)
 - Next.js 16 deprecates middleware file convention in favor of proxy (cosmetic warning, middleware still works)
 
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 03-02-PLAN.md
+Stopped at: Completed 03-03-PLAN.md (Phase 3 complete)
 Resume file: None
