@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-06)
 
 **Core value:** Users never sit on hold again. The AI handles the wait and gets them connected to a human agent ready to help.
-**Current focus:** Phase 2 complete. Phase 3 next - IVR Navigation & Human Detection
+**Current focus:** Phase 3 in progress - IVR Navigation & Human Detection
 
 ## Current Position
 
-Phase: 2 of 4 (Outbound Calling & Live Status)
-Plan: 3 of 3 in Phase 2
-Status: Phase 2 complete
-Last activity: 2026-02-06 - Completed 02-03-PLAN.md
+Phase: 3 of 4 (IVR Navigation & Human Detection)
+Plan: 1 of 3 in Phase 3
+Status: In progress
+Last activity: 2026-02-06 - Completed 03-01-PLAN.md
 
-Progress: [██████░░░░] 6/12 (50%)
+Progress: [███████░░░] 7/12 (58%)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
+- Total plans completed: 7
 - Average duration: 5min
-- Total execution time: 0.50 hours
+- Total execution time: 0.55 hours
 
 **By Phase:**
 
@@ -29,10 +29,11 @@ Progress: [██████░░░░] 6/12 (50%)
 |-------|-------|-------|----------|
 | 1. Foundation | 3/3 | 14min | 5min |
 | 2. Outbound Calling | 3/3 | 18min | 6min |
+| 3. IVR Navigation | 1/3 | 3min | 3min |
 
 **Recent Trend:**
-- Last 5 plans: 5min, 6min, 4min, 8min
-- Trend: stable (~5-6min/plan)
+- Last 5 plans: 6min, 4min, 8min, 3min
+- Trend: stable (~5min/plan)
 
 *Updated after each plan completion*
 
@@ -58,6 +59,9 @@ Recent decisions affecting current work:
 - Webhook secret via server.headers['x-vapi-secret'] (SDK Server type has no secret field)
 - DB call record created BEFORE Vapi API call to prevent webhook race condition
 - vapiClient.calls.delete() requires DeleteCallDto object { id: string }, not plain string
+- Single JSONB column per ISP for phone tree data (not relational node tables)
+- Unique index on isp_id (one tree per ISP, categories mapped via categoryMatchSlugs within tree)
+- Version column on isp_phone_tree for tracking tree updates
 
 ### Pending Todos
 
@@ -72,5 +76,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Phase 2 complete (02-03-PLAN.md)
+Stopped at: Completed 03-01-PLAN.md
 Resume file: None
