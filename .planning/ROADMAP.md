@@ -60,12 +60,12 @@ Plans:
   1. AI navigates ISP phone trees using DTMF tones and speech to reach the department matching the user's issue category
   2. AI distinguishes live human agents from IVR recordings, hold music, and automated hold interruptions with low false-positive rate
   3. ISP phone tree configurations are stored as data (not hardcoded) and can be updated without code changes
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
-- [ ] 03-03: TBD
+- [ ] 03-01-PLAN.md -- Phone tree data model, TypeScript types, DB migration, and seed data for 6 ISPs
+- [ ] 03-02-PLAN.md -- Prompt builder, enhanced Vapi assistant config (DTMF + function tools), expanded webhook handler
+- [ ] 03-03-PLAN.md -- Call status UI: live transcript panel, navigation status, agent-found animation
 
 ### Phase 4: Transfer & Bridging
 **Goal**: When a live agent picks up, the AI stalls them, calls the user back, conferences everyone together, and drops off -- completing the full product loop
