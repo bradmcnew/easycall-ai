@@ -13,7 +13,7 @@ EasyCallAI delivers an autonomous outbound phone call handler that navigates ISP
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - User auth via SMS OTP and ISP/issue selection UI
-- [ ] **Phase 2: Outbound Calling & Live Status** - Place calls to ISPs via Vapi, wait on hold, show real-time status in browser
+- [x] **Phase 2: Outbound Calling & Live Status** - Place calls to ISPs via Vapi, wait on hold, show real-time status in browser
 - [ ] **Phase 3: IVR Navigation & Human Detection** - AI navigates phone trees and detects when a live agent picks up
 - [ ] **Phase 4: Transfer & Bridging** - Stall agent, callback user, conference everyone in, AI drops off
 
@@ -48,9 +48,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md -- Schema migration, Vapi/Pusher library setup, call start API, confirm page wiring
-- [ ] 02-02-PLAN.md -- Vapi webhook handler, Pusher auth, call cancel and active call check routes
-- [ ] 02-03-PLAN.md -- Call status page with live Pusher updates, hold timer, cancel, summary card, active call redirect
+- [x] 02-01-PLAN.md -- Schema migration, Vapi/Pusher library setup, call start API, confirm page wiring
+- [x] 02-02-PLAN.md -- Vapi webhook handler, Pusher auth, call cancel and active call check routes
+- [x] 02-03-PLAN.md -- Call status page with live Pusher updates, hold timer, cancel, summary card, active call redirect
 
 ### Phase 3: IVR Navigation & Human Detection
 **Goal**: AI autonomously navigates ISP phone trees to reach the correct department queue and reliably detects when a live human agent picks up
@@ -92,6 +92,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | Phase | Plans Complete | Status | Completed |
 |-------|---------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-02-06 |
-| 2. Outbound Calling & Live Status | 0/3 | Not started | - |
+| 2. Outbound Calling & Live Status | 3/3 | Complete | 2026-02-06 |
 | 3. IVR Navigation & Human Detection | 0/3 | Not started | - |
 | 4. Transfer & Bridging | 0/3 | Not started | - |
