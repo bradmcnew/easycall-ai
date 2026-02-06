@@ -22,11 +22,12 @@ async function seed() {
         slug: ispData.slug,
         name: ispData.name,
         logoUrl: ispData.logoUrl,
+        supportPhone: ispData.supportPhone,
       })
       .onConflictDoNothing()
       .returning({ id: isp.id });
 
-    // If ISP already existed, look it up by slug
+    // If ISP already existed, look it up by slug and update supportPhone
     let ispId: string;
     if (insertedIsp) {
       ispId = insertedIsp.id;
@@ -36,6 +37,11 @@ async function seed() {
         .from(isp)
         .where(eq(isp.slug, ispData.slug));
       ispId = existing[0].id;
+      // Update supportPhone for existing ISPs
+      await db
+        .update(isp)
+        .set({ supportPhone: ispData.supportPhone })
+        .where(eq(isp.slug, ispData.slug));
     }
 
     // Insert categories for this ISP

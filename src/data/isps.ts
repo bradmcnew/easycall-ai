@@ -3,6 +3,7 @@ export const ISP_DATA = [
     slug: "comcast",
     name: "Comcast",
     logoUrl: "/logos/comcast.svg",
+    supportPhone: "+18009346489",
     categories: [
       {
         slug: "billing",
@@ -30,6 +31,7 @@ export const ISP_DATA = [
     slug: "att",
     name: "AT&T",
     logoUrl: "/logos/att.svg",
+    supportPhone: "+18002882020",
     categories: [
       {
         slug: "billing",
@@ -62,6 +64,7 @@ export const ISP_DATA = [
     slug: "spectrum",
     name: "Spectrum",
     logoUrl: "/logos/spectrum.svg",
+    supportPhone: "+18338672627",
     categories: [
       {
         slug: "billing",
@@ -94,6 +97,7 @@ export const ISP_DATA = [
     slug: "verizon",
     name: "Verizon",
     logoUrl: "/logos/verizon.svg",
+    supportPhone: "+18009220204",
     categories: [
       {
         slug: "billing",
@@ -126,6 +130,7 @@ export const ISP_DATA = [
     slug: "cox",
     name: "Cox",
     logoUrl: "/logos/cox.svg",
+    supportPhone: "+18002343993",
     categories: [
       {
         slug: "billing",
@@ -153,6 +158,7 @@ export const ISP_DATA = [
     slug: "centurylink",
     name: "CenturyLink",
     logoUrl: "/logos/centurylink.svg",
+    supportPhone: "+18002441111",
     categories: [
       {
         slug: "billing",
