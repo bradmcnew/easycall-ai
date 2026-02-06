@@ -9,28 +9,29 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 
 ## Current Position
 
-Phase: 1 of 4 (Foundation) -- COMPLETE
-Plan: 3 of 3 in Phase 1
-Status: Phase 1 complete, ready for Phase 2
-Last activity: 2026-02-06 - Phase 1 verified and complete
+Phase: 2 of 4 (Outbound Calling & Live Status)
+Plan: 1 of 3 in Phase 2
+Status: In progress
+Last activity: 2026-02-06 - Completed 02-01-PLAN.md
 
-Progress: [██░░░░░░░░] 3/12 (25%)
+Progress: [████░░░░░░] 4/12 (33%)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
+- Total plans completed: 4
 - Average duration: 5min
-- Total execution time: 0.23 hours
+- Total execution time: 0.33 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1. Foundation | 3/3 | 14min | 5min |
+| 2. Outbound Calling | 1/3 | 6min | 6min |
 
 **Recent Trend:**
-- Last 5 plans: 6min, 3min, 5min
+- Last 5 plans: 6min, 3min, 5min, 6min
 - Trend: stable (~5min/plan)
 
 *Updated after each plan completion*
@@ -53,10 +54,13 @@ Recent decisions affecting current work:
 - Phone number passed via URL search params between auth flow steps
 - URL search params for inter-page state (ISP slug, category slug, note)
 - Added unique constraint on issue_category(isp_id, slug)
+- silenceTimeoutSeconds passed via type assertion (SDK v0.11 omits from CreateAssistantDto)
+- Webhook secret via server.headers['x-vapi-secret'] (SDK Server type has no secret field)
+- DB call record created BEFORE Vapi API call to prevent webhook race condition
 
 ### Pending Todos
 
-None yet.
+- ISP support phone numbers need to be populated in seed data for end-to-end testing
 
 ### Blockers/Concerns
 
@@ -67,5 +71,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Phase 1 complete
+Stopped at: Completed 02-01-PLAN.md
 Resume file: None
