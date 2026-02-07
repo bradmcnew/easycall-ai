@@ -64,7 +64,7 @@ export const ISP_DATA = [
     slug: "spectrum",
     name: "Spectrum",
     logoUrl: "/logos/spectrum.svg",
-    supportPhone: "+18338672627",
+    supportPhone: "+18339490036",
     categories: [
       {
         slug: "billing",
