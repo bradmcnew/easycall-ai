@@ -97,15 +97,13 @@ export async function POST(req: Request) {
       where: eq(ispPhoneTree.ispId, ispId),
     });
 
-    // Build navigation prompt
-    const systemPrompt = phoneTreeRecord
-      ? buildNavigationPrompt(
-          ispRecord.name,
-          categoryRecord.label,
-          categoryRecord.slug,
-          phoneTreeRecord.tree
-        )
-      : `You are an AI assistant calling ${ispRecord.name} customer support. Navigate the phone tree dynamically to reach the ${categoryRecord.label} department queue, then wait on hold for a live human agent.\n\nLISTEN to each menu prompt fully before pressing any keys. PREFER pressing keys (DTMF) over speaking. If unsure, press 0 to try reaching an operator. If asked for an account number, say "I don't have my account number available." Do NOT provide any personal information.\n\nOnce in the hold queue, WAIT SILENTLY. When a LIVE HUMAN AGENT answers (not a recording), call the human_detected tool. Be CONSERVATIVE -- wait for personal introductions or direct questions before signaling.\n\nCall navigation_status when entering a new menu level or reaching the hold queue.`;
+    // Build navigation prompt (dynamic — AI listens and navigates on its own)
+    const systemPrompt = buildNavigationPrompt(
+      ispRecord.name,
+      categoryRecord.label,
+      categoryRecord.slug,
+      phoneTreeRecord?.tree ?? null
+    );
 
     // Create call record BEFORE calling Vapi (prevents webhook race condition)
     const [callRecord] = await db
