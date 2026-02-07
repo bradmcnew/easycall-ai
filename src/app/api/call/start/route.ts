@@ -230,11 +230,19 @@ If the user doesn't respond after your greeting, wait 3 seconds then call transf
           },
           voice: { provider: "vapi", voiceId: "Elliot" },
           transcriber: { provider: "deepgram", model: "nova-2", language: "en" },
-          firstMessageMode: "assistant-waits-for-user",
+          firstMessage: " ",
+          firstMessageMode: "assistant-speaks-first",
           // silenceTimeoutSeconds is accepted by the API but not typed in SDK v0.11
           ...({ silenceTimeoutSeconds: 3600 } as Record<string, unknown>),
-          // Short wait to avoid interrupting mid-sentence, but respond quickly
-          ...({ startSpeakingPlan: { waitSeconds: 0.4 } } as Record<string, unknown>),
+          // Smart endpointing: slower during IVR (first 30s), faster for human conversation
+          ...({
+            startSpeakingPlan: {
+              smartEndpointingPlan: {
+                provider: "livekit",
+                waitFunction: "t < 30 ? (x * 500 + 300) : (20 + 500 * sqrt(x) + 2500 * x^3)",
+              },
+            },
+          } as Record<string, unknown>),
           maxDurationSeconds: 2700,
           serverMessages: ["status-update", "end-of-call-report", "hang", "tool-calls", "transcript", "transfer-update"],
           server: {

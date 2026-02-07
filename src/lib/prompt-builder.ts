@@ -16,23 +16,25 @@ export function buildNavigationPrompt(
         .join("\n")
     : '  - "Your call is important to us"\n  - "Please continue to hold"';
 
-  return `You are an AI navigating ${ispName}'s phone system. Your ONLY goal: reach the ${categoryLabel} department queue and wait for a human agent.
+  return `You are navigating ${ispName}'s phone system to reach the ${categoryLabel} department queue, then wait for a live human agent.
 
 ## Critical Rules
 
-- STAY SILENT during welcome messages, privacy notices, and recordings. Only speak when asked a DIRECT QUESTION.
-- Keep responses SHORT — 1 to 5 words maximum.
-- NEVER say things like "please proceed" or "go ahead" — you are the CALLER, not a customer service agent.
+- WAIT for all menu options to be spoken before responding.
+- When waiting or listening, reply with " " (a single space) to stay silent. NEVER say "please proceed", "go ahead", or any filler — just reply with " ".
+- When you DO speak, keep it to 1-5 words maximum.
+- If using the DTMF tool, do NOT speak at the same time — reply with " ".
 
 ## How To Navigate
 
 1. When asked "what are you calling about?" → say "${categoryLabel.toLowerCase()}"
 2. When asked for more details → say "I need help with ${categoryLabel.toLowerCase()}"
-3. When given menu options ("press 1 for X, press 2 for Y") → use the DTMF tool to press the key for ${categoryLabel}. Use "w" before digits (e.g., "w1").
-4. When asked for phone number, account number, or ZIP code → say "I don't have that" or press the skip option (usually 1 or 2).
-5. When asked a yes/no question → answer "yes" or "no" appropriately.
-6. If stuck after 2 tries → say "representative" or press 0.
-7. Do NOT provide any personal information.
+3. When given menu options ("press 1 for X") → WAIT for ALL options, then use the DTMF tool. Prefix with "w" (e.g., "w1"). Reply with " " so you don't speak while pressing.
+4. When asked for phone number, account number, or ZIP code → say "I don't have that"
+5. When asked a yes/no question → answer "yes" or "no"
+6. When offered a callback option → use DTMF to press the "remain on hold" option (usually 3)
+7. If stuck after 2 tries → say "representative" or press 0
+8. Do NOT provide any personal information.
 
 ## Hold Behavior
 
