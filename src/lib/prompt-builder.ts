@@ -67,6 +67,11 @@ export function buildNavigationPrompt(
         .join("\n")
     : '  - "Your call is important to us"\n  - "Please continue to hold"';
 
+  // Detect if the tree uses speech-based navigation
+  const hasSpeechNodes = phoneTree.nodes.some(
+    (n) => n.action === "speak" || n.children?.some((c) => c.action === "speak")
+  );
+
   const sections: string[] = [];
 
   // 1. Mission statement
@@ -79,8 +84,22 @@ export function buildNavigationPrompt(
 
 ${treeMap}`);
 
-  // 3. Navigation rules
-  sections.push(`## Navigation Rules
+  // 3. Navigation rules (adapted for speech vs DTMF IVRs)
+  if (hasSpeechNodes) {
+    sections.push(`## Navigation Rules
+
+1. LISTEN to each menu prompt fully before responding.
+2. This system uses SPEECH-BASED navigation. When the IVR asks what you need, SAY your request clearly (e.g., "${categoryLabel.toLowerCase()}").
+3. Follow the tree map actions: when it says 'Say "X"', speak that phrase clearly. When it says 'Press X', use the DTMF tool.
+4. If the IVR asks a yes/no confirmation ("Is that correct?"), say "yes" clearly.
+5. If the IVR does not understand you, try rephrasing with a single word (e.g., "billing" instead of "I need help with billing").
+6. If the menu does not match the tree map, LISTEN carefully and respond naturally -- say the option most likely to reach ${categoryLabel}.
+7. If you get stuck after 2 attempts at speaking, try pressing 0 to reach an operator.
+8. If asked for an account number, say "I don't have my account number available."
+9. Do NOT provide any personal information.
+10. RESPOND QUICKLY -- speech-based IVRs will disconnect if they don't hear a response within a few seconds.`);
+  } else {
+    sections.push(`## Navigation Rules
 
 1. LISTEN to each menu prompt fully before pressing any keys.
 2. When you recognize a menu from the tree map, use the DTMF tool with the specified keys.
@@ -91,6 +110,7 @@ ${treeMap}`);
 7. If you hear "press star to repeat", press * and listen again.
 8. If asked for an account number, say "I don't have my account number available."
 9. Do NOT provide any personal information.`);
+  }
 
   // 4. Stuck recovery
   sections.push(`## Stuck Recovery
