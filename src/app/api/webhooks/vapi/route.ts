@@ -3,7 +3,6 @@ import { db } from "@/db";
 import { call, callEvent, user } from "@/db/schema";
 import { pusherServer } from "@/lib/pusher-server";
 import { callChannel } from "@/lib/call-channel";
-import { orchestrateTransfer } from "@/lib/transfer-orchestrator";
 import { getStallInstructions } from "@/lib/stall-prompt";
 
 // Map Vapi status-update statuses to app call status enum
@@ -100,24 +99,6 @@ export async function POST(req: Request) {
       const mappedStatus = mapVapiStatusToCallStatus(vapiStatus, message.endedReason);
       const eventType = mapVapiStatusToEventType(vapiStatus);
 
-      // Guard: do not overwrite transfer-managed statuses
-      const transferStatuses = ["transferring", "connected"];
-      if (transferStatuses.includes(callRecord.status) && (mappedStatus === "completed" || mappedStatus === "failed")) {
-        // Call is in transfer flow -- Twilio conference webhooks manage status
-        // Still log the event but don't change status
-        await db.insert(callEvent).values({
-          callId: callRecord.id,
-          eventType,
-          metadata: JSON.stringify({
-            vapiStatus,
-            endedReason: message.endedReason ?? null,
-            timestamp: message.timestamp ?? null,
-            skipped: "transfer-managed",
-          }),
-        });
-        return new Response("OK", { status: 200 });
-      }
-
       // Insert call_event
       await db.insert(callEvent).values({
         callId: callRecord.id,
@@ -180,26 +161,73 @@ export async function POST(req: Request) {
         return new Response("OK", { status: 200 });
       }
 
+      // Warm transfer outcomes
+      if (endedReason === "assistant-forwarded-call") {
+        // Successful warm transfer -- user and ISP agent are connected
+        await db.insert(callEvent).values({
+          callId: callRecord.id,
+          eventType: "user_connected",
+          metadata: JSON.stringify({
+            endedReason,
+            source: "end-of-call-report",
+          }),
+        });
+
+        await db
+          .update(call)
+          .set({
+            status: "connected",
+            updatedAt: new Date(),
+          })
+          .where(eq(call.id, callRecord.id));
+
+        await pusherServer.trigger(callChannel(callRecord.id), "status-change", {
+          status: "connected",
+          timestamp: new Date().toISOString(),
+        });
+
+        return new Response("OK", { status: 200 });
+      }
+
+      if (endedReason?.includes("warm-transfer-assistant-cancelled")) {
+        // Transfer assistant cancelled -- user didn't answer or transfer failed
+        await db.insert(callEvent).values({
+          callId: callRecord.id,
+          eventType: "failed",
+          metadata: JSON.stringify({
+            endedReason,
+            source: "end-of-call-report",
+            reason: "transfer_cancelled",
+          }),
+        });
+
+        await db
+          .update(call)
+          .set({
+            status: "failed",
+            endedReason: "user-no-answer",
+            endedAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(eq(call.id, callRecord.id));
+
+        await pusherServer.trigger(callChannel(callRecord.id), "status-change", {
+          status: "failed",
+          timestamp: new Date().toISOString(),
+        });
+
+        await pusherServer.trigger(callChannel(callRecord.id), "call-ended", {
+          status: "failed",
+          endedReason: "user-no-answer",
+          endedAt: new Date().toISOString(),
+        });
+
+        return new Response("OK", { status: 200 });
+      }
+
       const isFailed = endedReason ? isFailedEndedReason(endedReason) : false;
       const finalStatus = isFailed ? "failed" : "completed";
       const eventType = isFailed ? "failed" : "completed";
-
-      // Guard: do not overwrite transfer-managed statuses
-      const transferStatuses = ["transferring", "connected"];
-      if (transferStatuses.includes(callRecord.status)) {
-        // Call is in transfer flow -- Twilio conference webhooks manage status
-        // Still log the event but don't change status
-        await db.insert(callEvent).values({
-          callId: callRecord.id,
-          eventType,
-          metadata: JSON.stringify({
-            endedReason: endedReason ?? null,
-            source: "end-of-call-report",
-            skipped: "transfer-managed",
-          }),
-        });
-        return new Response("OK", { status: 200 });
-      }
 
       // Insert call_event
       await db.insert(callEvent).values({
@@ -298,26 +326,29 @@ export async function POST(req: Request) {
               ? userRecord.name
               : "the customer";
 
-          // Get stall instructions for the AI to keep the agent engaged
+          // Get stall instructions for the AI (includes transferCall directive)
           const stallInstructions = getStallInstructions(userName);
 
-          // Fire-and-forget the transfer orchestrator -- MUST NOT block
-          // the webhook response (7.5s Vapi timeout)
-          if (userRecord?.phoneNumber && callRecord.vapiControlUrl) {
-            void orchestrateTransfer({
-              callId: callRecord.id,
-              vapiCallId: vapiCallId!,
-              vapiControlUrl: callRecord.vapiControlUrl,
-              userPhone: userRecord.phoneNumber,
-            }).catch((err) => {
-              console.error("Transfer orchestration failed:", err);
-            });
-          } else {
-            console.error(
-              "Cannot start transfer: missing userPhone or vapiControlUrl",
-              { callId: callRecord.id }
-            );
-          }
+          // Also set transferring status since AI will call transferCall next
+          await db
+            .update(call)
+            .set({ status: "transferring", updatedAt: new Date() })
+            .where(eq(call.id, callRecord.id));
+
+          await db.insert(callEvent).values({
+            callId: callRecord.id,
+            eventType: "transfer_initiated",
+            metadata: JSON.stringify({ method: "vapi-warm-transfer" }),
+          });
+
+          await pusherServer.trigger(
+            callChannel(callRecord.id),
+            "status-change",
+            {
+              status: "transferring",
+              timestamp: new Date().toISOString(),
+            }
+          );
 
           results.push({
             toolCallId: toolCall.id,
