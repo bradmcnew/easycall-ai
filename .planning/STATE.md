@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-06)
 
 **Core value:** Users never sit on hold again. The AI handles the wait and gets them connected to a human agent ready to help.
-**Current focus:** Phase 3 complete - Ready for Phase 4 (Transfer & Bridging)
+**Current focus:** Phase 4 in progress (Transfer & Bridging)
 
 ## Current Position
 
-Phase: 3 of 4 (IVR Navigation & Human Detection)
-Plan: 3 of 3 in Phase 3
-Status: Phase complete
-Last activity: 2026-02-06 - Completed 03-03-PLAN.md
+Phase: 4 of 4 (Transfer & Bridging)
+Plan: 1 of 3 in Phase 4
+Status: In progress
+Last activity: 2026-02-06 - Completed 04-01-PLAN.md
 
-Progress: [█████████░] 9/12 (75%)
+Progress: [██████████░░] 10/12 (83%)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
+- Total plans completed: 10
 - Average duration: 5min
-- Total execution time: 0.7 hours
+- Total execution time: 0.75 hours
 
 **By Phase:**
 
@@ -30,9 +30,10 @@ Progress: [█████████░] 9/12 (75%)
 | 1. Foundation | 3/3 | 14min | 5min |
 | 2. Outbound Calling | 3/3 | 18min | 6min |
 | 3. IVR Navigation | 3/3 | 11min | 4min |
+| 4. Transfer & Bridging | 1/3 | 3min | 3min |
 
 **Recent Trend:**
-- Last 5 plans: 4min, 8min, 3min, 3min, 5min
+- Last 5 plans: 8min, 3min, 3min, 5min, 3min
 - Trend: stable (~4min/plan)
 
 *Updated after each plan completion*
@@ -68,6 +69,9 @@ Recent decisions affecting current work:
 - 1.5s startSpeakingPlan wait to avoid interrupting IVR menu options
 - Vapi SDK tools must be on model object, not assistant object (discovered during Phase 3 testing)
 - Transcript labels: AI for assistant role, Phone for user/IVR role
+- Twilio Conference beep param is string type ("false"), not boolean (SDK typing)
+- vapiClient.calls.get() requires { id: string } object, not plain string (SDK v0.11)
+- Conference-bridge fallback uses status-based lookup (most recent transferring call)
 
 ### Pending Todos
 
@@ -81,5 +85,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 03-03-PLAN.md (Phase 3 complete)
+Stopped at: Completed 04-01-PLAN.md
 Resume file: None
