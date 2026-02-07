@@ -1,8 +1,10 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { call, callEvent } from "@/db/schema";
+import { call, callEvent, user } from "@/db/schema";
 import { pusherServer } from "@/lib/pusher-server";
 import { callChannel } from "@/lib/call-channel";
+import { orchestrateTransfer } from "@/lib/transfer-orchestrator";
+import { getStallInstructions } from "@/lib/stall-prompt";
 
 // Map Vapi status-update statuses to app call status enum
 function mapVapiStatusToCallStatus(
@@ -98,6 +100,24 @@ export async function POST(req: Request) {
       const mappedStatus = mapVapiStatusToCallStatus(vapiStatus, message.endedReason);
       const eventType = mapVapiStatusToEventType(vapiStatus);
 
+      // Guard: do not overwrite transfer-managed statuses
+      const transferStatuses = ["transferring", "connected"];
+      if (transferStatuses.includes(callRecord.status) && (mappedStatus === "completed" || mappedStatus === "failed")) {
+        // Call is in transfer flow -- Twilio conference webhooks manage status
+        // Still log the event but don't change status
+        await db.insert(callEvent).values({
+          callId: callRecord.id,
+          eventType,
+          metadata: JSON.stringify({
+            vapiStatus,
+            endedReason: message.endedReason ?? null,
+            timestamp: message.timestamp ?? null,
+            skipped: "transfer-managed",
+          }),
+        });
+        return new Response("OK", { status: 200 });
+      }
+
       // Insert call_event
       await db.insert(callEvent).values({
         callId: callRecord.id,
@@ -163,6 +183,23 @@ export async function POST(req: Request) {
       const isFailed = endedReason ? isFailedEndedReason(endedReason) : false;
       const finalStatus = isFailed ? "failed" : "completed";
       const eventType = isFailed ? "failed" : "completed";
+
+      // Guard: do not overwrite transfer-managed statuses
+      const transferStatuses = ["transferring", "connected"];
+      if (transferStatuses.includes(callRecord.status)) {
+        // Call is in transfer flow -- Twilio conference webhooks manage status
+        // Still log the event but don't change status
+        await db.insert(callEvent).values({
+          callId: callRecord.id,
+          eventType,
+          metadata: JSON.stringify({
+            endedReason: endedReason ?? null,
+            source: "end-of-call-report",
+            skipped: "transfer-managed",
+          }),
+        });
+        return new Response("OK", { status: 200 });
+      }
 
       // Insert call_event
       await db.insert(callEvent).values({
@@ -248,9 +285,43 @@ export async function POST(req: Request) {
             }
           );
 
+          // Look up user's phone number and name for transfer callback
+          const userRecord = await db.query.user.findFirst({
+            where: eq(user.id, callRecord.userId),
+            columns: { phoneNumber: true, name: true },
+          });
+
+          // Determine display name -- BetterAuth sets name to phone number
+          // (which contains "@" if it's the temp email format)
+          const userName =
+            userRecord?.name && !userRecord.name.includes("@")
+              ? userRecord.name
+              : "the customer";
+
+          // Get stall instructions for the AI to keep the agent engaged
+          const stallInstructions = getStallInstructions(userName);
+
+          // Fire-and-forget the transfer orchestrator -- MUST NOT block
+          // the webhook response (7.5s Vapi timeout)
+          if (userRecord?.phoneNumber && callRecord.vapiControlUrl) {
+            void orchestrateTransfer({
+              callId: callRecord.id,
+              vapiCallId: vapiCallId!,
+              vapiControlUrl: callRecord.vapiControlUrl,
+              userPhone: userRecord.phoneNumber,
+            }).catch((err) => {
+              console.error("Transfer orchestration failed:", err);
+            });
+          } else {
+            console.error(
+              "Cannot start transfer: missing userPhone or vapiControlUrl",
+              { callId: callRecord.id }
+            );
+          }
+
           results.push({
             toolCallId: toolCall.id,
-            result: "Human agent detected. Proceeding to transfer phase.",
+            result: stallInstructions,
           });
         } else if (funcName === "navigation_status") {
           const navStatus = params.status;
