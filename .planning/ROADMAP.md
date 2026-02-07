@@ -77,12 +77,12 @@ Plans:
   3. AI drops off the call once the user is successfully connected to the ISP agent
   4. If the user does not answer the callback, AI apologizes to the ISP agent and ends the call gracefully
   5. The full end-to-end flow works: user initiates call, AI navigates tree, waits on hold, detects agent, stalls, calls user back, conferences, drops off
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
-- [ ] 04-03: TBD
+- [ ] 04-01-PLAN.md -- Transfer orchestrator, stall prompt, Twilio client, conference webhooks
+- [ ] 04-02-PLAN.md -- Wire human_detected to transfer orchestrator, stall instructions, status guards
+- [ ] 04-03-PLAN.md -- Transfer/connected UI states, call timer, transfer failure reasons
 
 ## Progress
 
