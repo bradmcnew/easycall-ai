@@ -102,22 +102,22 @@ export const PHONE_TREE_DATA: Record<string, IspPhoneTreeConfig> = {
     nodes: [
       {
         id: "att-welcome",
-        prompt: "Welcome to AT&T. Please say what you are calling about.",
+        prompt: "What's the issue you're calling about? / What can I do for you today?",
         action: "speak",
-        spokenResponse: "billing",
+        spokenResponse: "technical support",
         expectedDelayMs: 5000,
         children: [
           {
-            id: "att-billing-confirm",
-            prompt: "I think you said billing. Is that correct?",
+            id: "att-tell-more-billing",
+            prompt: "Please tell me more about what sort of problem you're having.",
             action: "speak",
-            spokenResponse: "yes",
+            spokenResponse: "I have a question about my bill",
             categoryMatchSlugs: ["billing"],
-            expectedDelayMs: 3000,
+            expectedDelayMs: 5000,
             children: [
               {
                 id: "att-billing-queue",
-                prompt: "Please hold while we connect you to a billing specialist.",
+                prompt: "Let me transfer you. / Please hold while we connect you.",
                 action: "wait",
                 categoryMatchSlugs: ["billing"],
                 isHoldQueue: true,
@@ -126,23 +126,23 @@ export const PHONE_TREE_DATA: Record<string, IspPhoneTreeConfig> = {
             ],
           },
           {
-            id: "att-technical-confirm",
-            prompt: "I think you said technical support. Is that correct?",
+            id: "att-tell-more-technical",
+            prompt: "Please tell me more about what sort of problem you're having.",
             action: "speak",
-            spokenResponse: "yes",
+            spokenResponse: "my internet is not working",
             categoryMatchSlugs: ["technical"],
-            expectedDelayMs: 3000,
+            expectedDelayMs: 5000,
             children: [
               {
                 id: "att-tech-troubleshoot",
-                prompt: "Have you tried restarting your equipment? Press 1 for yes, press 2 to skip troubleshooting.",
-                action: "dtmf",
-                keys: "w2",
+                prompt: "Have you tried restarting your equipment? / Would you like to troubleshoot?",
+                action: "speak",
+                spokenResponse: "I'd like to speak with a representative",
                 expectedDelayMs: 5000,
                 children: [
                   {
                     id: "att-tech-queue",
-                    prompt: "Please hold for the next available technical support agent.",
+                    prompt: "Please hold for the next available agent.",
                     action: "wait",
                     categoryMatchSlugs: ["technical"],
                     isHoldQueue: true,
@@ -153,16 +153,16 @@ export const PHONE_TREE_DATA: Record<string, IspPhoneTreeConfig> = {
             ],
           },
           {
-            id: "att-cancel-confirm",
-            prompt: "I think you said cancel service. Is that correct?",
+            id: "att-tell-more-cancel",
+            prompt: "Please tell me more about what sort of problem you're having.",
             action: "speak",
-            spokenResponse: "yes",
+            spokenResponse: "I want to cancel my service",
             categoryMatchSlugs: ["cancellation"],
-            expectedDelayMs: 3000,
+            expectedDelayMs: 5000,
             children: [
               {
                 id: "att-cancel-queue",
-                prompt: "We'd like to help you stay. Please hold for a loyalty specialist.",
+                prompt: "Let me transfer you to our loyalty team. Please hold.",
                 action: "wait",
                 categoryMatchSlugs: ["cancellation"],
                 isHoldQueue: true,
@@ -171,12 +171,22 @@ export const PHONE_TREE_DATA: Record<string, IspPhoneTreeConfig> = {
             ],
           },
           {
-            id: "att-general-confirm",
-            prompt: "Let me connect you with a representative.",
-            action: "wait",
+            id: "att-tell-more-general",
+            prompt: "Please tell me more about what sort of problem you're having.",
+            action: "speak",
+            spokenResponse: "I need to speak with a representative",
             categoryMatchSlugs: ["general"],
-            isHoldQueue: true,
-            expectedDelayMs: 2000,
+            expectedDelayMs: 5000,
+            children: [
+              {
+                id: "att-general-queue",
+                prompt: "Please hold for the next available representative.",
+                action: "wait",
+                categoryMatchSlugs: ["general"],
+                isHoldQueue: true,
+                expectedDelayMs: 2000,
+              },
+            ],
           },
         ],
       },
@@ -191,7 +201,7 @@ export const PHONE_TREE_DATA: Record<string, IspPhoneTreeConfig> = {
       "we appreciate your patience",
     ],
     navigationNotes:
-      "AT&T uses a speech-based IVR. When it asks 'What are you calling about?' or 'How can I help you?', SAY the category name (e.g. 'billing', 'technical support', 'cancel service'). Do NOT press keys at the main menu -- speak your request clearly. If it asks for confirmation ('Is that correct?'), say 'yes'. If it does not understand, try rephrasing simply. After routing, it may switch to DTMF menus for troubleshooting -- press 2 to skip automated troubleshooting.",
+      "AT&T uses a speech-based IVR -- you must SPEAK your responses, not press keys. The system asks open-ended questions like 'What's the issue you're calling about?' and 'Tell me more about your problem.' RESPOND IMMEDIATELY when asked -- do not wait. Use simple, direct phrases. If the system doesn't understand after 2 attempts, say 'representative' or 'agent' to try to reach a human directly. The system may also offer DTMF options during troubleshooting -- press 2 or say 'skip' to bypass automated troubleshooting.",
     dtmfPauseChar: "w",
   },
 

@@ -13,18 +13,18 @@ function formatTreeForPrompt(
   const lines: string[] = [];
 
   for (const node of nodes) {
-    // Show what the IVR says
-    lines.push(`${pad}- IVR says: "${node.prompt}"`);
+    // Show what the IVR says (this is what you HEAR, do NOT speak this)
+    lines.push(`${pad}- HEAR: "${node.prompt}"`);
 
-    // Show the action
+    // Show the action (this is what you DO)
     if (node.action === "dtmf" && node.keys) {
-      lines.push(`${pad}  Action: Press ${node.keys}`);
+      lines.push(`${pad}  DO: Press ${node.keys}`);
     } else if (node.action === "speak" && node.spokenResponse) {
-      lines.push(`${pad}  Action: Say "${node.spokenResponse}"`);
+      lines.push(`${pad}  DO: Say "${node.spokenResponse}"`);
     } else if (node.action === "wait") {
-      lines.push(`${pad}  Action: Wait (do not press anything)`);
+      lines.push(`${pad}  DO: Wait silently (do not press anything or speak)`);
     } else if (node.action === "skip") {
-      lines.push(`${pad}  Action: Skip (ignore this prompt)`);
+      lines.push(`${pad}  DO: Ignore this prompt`);
     }
 
     // Mark target paths
