@@ -1,65 +1,104 @@
 import type { IspPhoneTreeConfig, PhoneTreeNode } from "@/lib/phone-tree-types";
 
 /**
- * Recursively format phone tree nodes into readable text for the AI system prompt.
- * Marks target paths and hold queues for the specified category.
- *
- * For DTMF trees: shows IVR prompts and key presses.
- * For speech trees: only shows what to SAY (omits IVR text to prevent AI from speaking it).
+ * Format DTMF-based phone tree nodes into readable text for the AI system prompt.
+ * Shows IVR prompts and key presses with target path markers.
  */
-function formatTreeForPrompt(
+function formatDtmfTreeForPrompt(
   nodes: PhoneTreeNode[],
   targetSlug: string,
-  indent: number = 0,
-  isSpeechBased: boolean = false
+  indent: number = 0
 ): string {
   const pad = "  ".repeat(indent);
   const lines: string[] = [];
 
   for (const node of nodes) {
-    if (isSpeechBased) {
-      // Speech-based: only show actions, never show IVR prompt text
-      if (node.action === "speak" && node.spokenResponse) {
-        const isTarget = node.categoryMatchSlugs?.includes(targetSlug);
-        lines.push(`${pad}- Say "${node.spokenResponse}"${isTarget ? " ← TARGET" : ""}`);
-      } else if (node.action === "dtmf" && node.keys) {
-        lines.push(`${pad}- Press ${node.keys}`);
-      } else if (node.action === "wait" || node.isHoldQueue) {
-        lines.push(`${pad}- Wait silently (hold queue reached)`);
-      }
-    } else {
-      // DTMF-based: show IVR prompts so AI can match menus
-      lines.push(`${pad}- HEAR: "${node.prompt}"`);
+    lines.push(`${pad}- HEAR: "${node.prompt}"`);
 
-      if (node.action === "dtmf" && node.keys) {
-        lines.push(`${pad}  DO: Press ${node.keys}`);
-      } else if (node.action === "speak" && node.spokenResponse) {
-        lines.push(`${pad}  DO: Say "${node.spokenResponse}"`);
-      } else if (node.action === "wait") {
-        lines.push(`${pad}  DO: Wait silently (do not press anything or speak)`);
-      } else if (node.action === "skip") {
-        lines.push(`${pad}  DO: Ignore this prompt`);
-      }
-
-      if (node.categoryMatchSlugs?.includes(targetSlug)) {
-        lines.push(`${pad}  >>> TARGET PATH`);
-      }
-
-      if (node.isHoldQueue) {
-        lines.push(`${pad}  >>> HOLD QUEUE - YOU ARE HERE, WAIT SILENTLY`);
-      }
+    if (node.action === "dtmf" && node.keys) {
+      lines.push(`${pad}  DO: Press ${node.keys}`);
+    } else if (node.action === "speak" && node.spokenResponse) {
+      lines.push(`${pad}  DO: Say "${node.spokenResponse}"`);
+    } else if (node.action === "wait") {
+      lines.push(`${pad}  DO: Wait silently (do not press anything or speak)`);
+    } else if (node.action === "skip") {
+      lines.push(`${pad}  DO: Ignore this prompt`);
     }
 
-    // Recurse into children
+    if (node.categoryMatchSlugs?.includes(targetSlug)) {
+      lines.push(`${pad}  >>> TARGET PATH`);
+    }
+
+    if (node.isHoldQueue) {
+      lines.push(`${pad}  >>> HOLD QUEUE - YOU ARE HERE, WAIT SILENTLY`);
+    }
+
     if (node.children && node.children.length > 0) {
-      if (!isSpeechBased) {
-        lines.push(`${pad}  Sub-menu:`);
-      }
-      lines.push(formatTreeForPrompt(node.children, targetSlug, indent + (isSpeechBased ? 1 : 2), isSpeechBased));
+      lines.push(`${pad}  Sub-menu:`);
+      lines.push(formatDtmfTreeForPrompt(node.children, targetSlug, indent + 2));
     }
   }
 
   return lines.join("\n");
+}
+
+/**
+ * Extract the target category path from a speech-based phone tree as a flat numbered list.
+ * Only includes nodes along the path to the target category — no branching.
+ */
+function extractSpeechTargetPath(
+  nodes: PhoneTreeNode[],
+  targetSlug: string,
+  categoryLabel: string
+): string[] {
+  const steps: string[] = [];
+
+  // First step: always say the category label (overrides root node's hardcoded spokenResponse)
+  steps.push(`Say "${categoryLabel.toLowerCase()}"`);
+
+  // Find the target branch in children and collect remaining steps
+  function walkTargetPath(children: PhoneTreeNode[] | undefined): void {
+    if (!children) return;
+
+    // Find the child node that matches the target category
+    const targetChild = children.find((n) =>
+      n.categoryMatchSlugs?.includes(targetSlug)
+    );
+
+    if (!targetChild) {
+      // No direct match — try recursing into each child
+      for (const child of children) {
+        if (child.children) {
+          const before = steps.length;
+          walkTargetPath(child.children);
+          if (steps.length > before) return; // Found it deeper
+        }
+      }
+      return;
+    }
+
+    // Add this node's action
+    if (targetChild.action === "speak" && targetChild.spokenResponse) {
+      steps.push(`Say "${targetChild.spokenResponse}"`);
+    } else if (targetChild.action === "dtmf" && targetChild.keys) {
+      steps.push(`Press ${targetChild.keys}`);
+    } else if (targetChild.action === "wait" || targetChild.isHoldQueue) {
+      steps.push(`Wait silently — you are now in the hold queue`);
+      return;
+    }
+
+    // Continue down the path
+    if (targetChild.children) {
+      walkTargetPath(targetChild.children);
+    }
+  }
+
+  // Start from root node's children
+  if (nodes.length > 0 && nodes[0].children) {
+    walkTargetPath(nodes[0].children);
+  }
+
+  return steps;
 }
 
 /**
@@ -79,8 +118,6 @@ export function buildNavigationPrompt(
     (n) => n.action === "speak" || n.children?.some((c) => c.action === "speak")
   );
 
-  const treeMap = formatTreeForPrompt(phoneTree.nodes, categorySlug, 0, hasSpeechNodes);
-
   const holdPatterns = phoneTree.holdInterruptionPatterns?.length
     ? phoneTree.holdInterruptionPatterns
         .map((p) => `  - "${p}"`)
@@ -96,13 +133,22 @@ export function buildNavigationPrompt(
 
   // 2. What to say / Phone tree map
   if (hasSpeechNodes) {
-    sections.push(`## What To Say (in order)
+    const targetSteps = extractSpeechTargetPath(phoneTree.nodes, categorySlug, categoryLabel);
+    const numberedSteps = targetSteps.map((s, i) => `${i + 1}. ${s}`).join("\n");
 
-When the system asks you a question, follow these steps in order:
-${treeMap}
+    sections.push(`## What To Say (follow these steps exactly)
 
-IMPORTANT: Do NOT say anything other than what is listed above. Wait for the system to ask you a question first, then say ONLY the phrase listed. Never repeat the system's questions back.`);
+Each time the system asks you a question, say the NEXT phrase on this list:
+
+${numberedSteps}
+
+IMPORTANT:
+- Say ONLY these exact phrases, one at a time, each time the system asks you something.
+- Do NOT add extra words or explanations.
+- Do NOT repeat a phrase you already said — move to the NEXT step.
+- NEVER repeat the system's words back to it.`);
   } else {
+    const treeMap = formatDtmfTreeForPrompt(phoneTree.nodes, categorySlug);
     sections.push(`## Phone Tree Map
 
 ${treeMap}`);
