@@ -4,7 +4,7 @@ import { z } from "zod";
 import { eq, and, notInArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import { call, callEvent, isp, issueCategory, ispPhoneTree } from "@/db/schema";
+import { call, callEvent, isp, issueCategory, ispPhoneTree, user } from "@/db/schema";
 import { vapiClient } from "@/lib/vapi";
 import { buildNavigationPrompt } from "@/lib/prompt-builder";
 
@@ -22,6 +22,18 @@ export async function POST(req: Request) {
     });
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Validate user has a phone number (required for transfer callback)
+    const userRecord = await db.query.user.findFirst({
+      where: eq(user.id, session.user.id),
+      columns: { phoneNumber: true },
+    });
+    if (!userRecord?.phoneNumber) {
+      return NextResponse.json(
+        { error: "Phone number required for callback" },
+        { status: 400 }
+      );
     }
 
     // Parse and validate body
