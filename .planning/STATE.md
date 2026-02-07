@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-06)
 
 **Core value:** Users never sit on hold again. The AI handles the wait and gets them connected to a human agent ready to help.
-**Current focus:** Phase 4 in progress (Transfer & Bridging)
+**Current focus:** Phase 4 complete (Transfer & Bridging)
 
 ## Current Position
 
 Phase: 4 of 4 (Transfer & Bridging)
-Plan: 2 of 3 in Phase 4
-Status: In progress
-Last activity: 2026-02-06 - Completed 04-02-PLAN.md
+Plan: 4 of 4 in Phase 4
+Status: Phase complete
+Last activity: 2026-02-06 - Completed 04-04-PLAN.md
 
-Progress: [███████████░] 11/12 (92%)
+Progress: [████████████] 12/12 (100%)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
-- Average duration: 5min
-- Total execution time: 0.79 hours
+- Total plans completed: 12
+- Average duration: 4min
+- Total execution time: 0.83 hours
 
 **By Phase:**
 
@@ -30,10 +30,10 @@ Progress: [███████████░] 11/12 (92%)
 | 1. Foundation | 3/3 | 14min | 5min |
 | 2. Outbound Calling | 3/3 | 18min | 6min |
 | 3. IVR Navigation | 3/3 | 11min | 4min |
-| 4. Transfer & Bridging | 2/3 | 5min | 3min |
+| 4. Transfer & Bridging | 3/3 | 7min | 2min |
 
 **Recent Trend:**
-- Last 5 plans: 3min, 3min, 5min, 3min, 2min
+- Last 5 plans: 3min, 5min, 3min, 2min, 2min
 - Trend: stable (~3min/plan)
 
 *Updated after each plan completion*
@@ -68,13 +68,11 @@ Recent decisions affecting current work:
 - Silent first message (space) lets IVR speak first without AI interruption
 - 1.5s startSpeakingPlan wait to avoid interrupting IVR menu options
 - Vapi SDK tools must be on model object, not assistant object (discovered during Phase 3 testing)
-- Transcript labels: AI for assistant role, Phone for user/IVR role
-- Twilio Conference beep param is string type ("false"), not boolean (SDK typing)
-- vapiClient.calls.get() requires { id: string } object, not plain string (SDK v0.11)
-- Conference-bridge fallback uses status-based lookup (most recent transferring call)
-- Query user table for phone at transfer time (avoids migration; join via call.userId FK)
-- Fire-and-forget orchestrateTransfer with void promise (must not block 7.5s Vapi webhook timeout)
-- Guard both status-update and end-of-call-report against overwriting transferring/connected statuses
+- Transcript labels: AI for assistant role, Phone for user/IVR phone
+- Vapi warm-transfer-experimental replaces Twilio Conference (eliminates 4 files, separate phone number, conference webhooks)
+- AI calls transferCall tool itself (not server-side controlUrl orchestration)
+- Transfer assistant uses gpt-4o-mini with 45s timeout for brief user-connection interaction
+- end-of-call-report is authoritative for transfer outcomes (no separate conference webhooks)
 
 ### Pending Todos
 
@@ -82,11 +80,10 @@ Recent decisions affecting current work:
 
 ### Blockers/Concerns
 
-- Agent hangup during transfer gap is critical risk (Phase 4)
 - Next.js 16 deprecates middleware file convention in favor of proxy (cosmetic warning, middleware still works)
 
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 04-02-PLAN.md
+Stopped at: Completed 04-04-PLAN.md
 Resume file: None
