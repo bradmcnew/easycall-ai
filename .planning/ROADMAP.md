@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation** - User auth via SMS OTP and ISP/issue selection UI
 - [x] **Phase 2: Outbound Calling & Live Status** - Place calls to ISPs via Vapi, wait on hold, show real-time status in browser
 - [x] **Phase 3: IVR Navigation & Human Detection** - AI navigates phone trees and detects when a live agent picks up
-- [ ] **Phase 4: Transfer & Bridging** - Stall agent, callback user, conference everyone in, AI drops off
+- [ ] **Phase 4: Transfer & Bridging** - Stall agent, warm transfer user via Vapi, AI drops off
 
 ## Phase Details
 
@@ -68,21 +68,23 @@ Plans:
 - [x] 03-03-PLAN.md -- Call status UI: live transcript panel, navigation status, agent-found animation
 
 ### Phase 4: Transfer & Bridging
-**Goal**: When a live agent picks up, the AI stalls them, calls the user back, conferences everyone together, and drops off -- completing the full product loop
+**Goal**: When a live agent picks up, the AI stalls them briefly, triggers Vapi warm transfer to call the user back, and drops off once the user and agent are connected -- completing the full product loop
 **Depends on**: Phase 3
 **Requirements**: XFER-01, XFER-02, XFER-03, XFER-04
 **Success Criteria** (what must be TRUE):
   1. AI engages the ISP agent in polite stalling conversation while the user is being called back
-  2. User receives a callback on their phone and is conferenced into the live call with the ISP agent
+  2. User receives a callback on their phone and is connected to the live call with the ISP agent via Vapi warm transfer
   3. AI drops off the call once the user is successfully connected to the ISP agent
-  4. If the user does not answer the callback, AI apologizes to the ISP agent and ends the call gracefully
-  5. The full end-to-end flow works: user initiates call, AI navigates tree, waits on hold, detects agent, stalls, calls user back, conferences, drops off
-**Plans**: 3 plans
+  4. If the user does not answer the callback, the transfer assistant's fallback plan apologizes to the ISP agent and ends the call gracefully
+  5. The full end-to-end flow works: user initiates call, AI navigates tree, waits on hold, detects agent, stalls, triggers warm transfer, user called back, connected, AI exits
+**Plans**: 5 plans
 
 Plans:
-- [x] 04-01-PLAN.md -- Transfer orchestrator, stall prompt, Twilio client, conference webhooks
-- [x] 04-02-PLAN.md -- Wire human_detected to transfer orchestrator, stall instructions, status guards
-- [ ] 04-03-PLAN.md -- Transfer/connected UI states, call timer, transfer failure reasons
+- [x] 04-01-PLAN.md -- ~~Transfer orchestrator, stall prompt, Twilio client, conference webhooks~~ (SUPERSEDED by 04-04)
+- [x] 04-02-PLAN.md -- ~~Wire human_detected to transfer orchestrator, stall instructions, status guards~~ (SUPERSEDED by 04-04)
+- [x] 04-03-PLAN.md -- Transfer/connected UI states, call timer, transfer failure reasons (Task 1 committed, checkpoint pending)
+- [ ] 04-04-PLAN.md -- Replace Twilio Conference with Vapi warm transfer (gap closure: delete conference code, add transferCall tool, update webhook)
+- [ ] 04-05-PLAN.md -- Verify warm transfer pivot (build check, dead code scan, human review)
 
 ## Progress
 
@@ -94,4 +96,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | 1. Foundation | 3/3 | Complete | 2026-02-06 |
 | 2. Outbound Calling & Live Status | 3/3 | Complete | 2026-02-06 |
 | 3. IVR Navigation & Human Detection | 3/3 | Complete | 2026-02-06 |
-| 4. Transfer & Bridging | 2/3 | In progress | - |
+| 4. Transfer & Bridging | 3/5 | In progress (architectural pivot) | - |
