@@ -3,44 +3,59 @@ import type { IspPhoneTreeConfig, PhoneTreeNode } from "@/lib/phone-tree-types";
 /**
  * Recursively format phone tree nodes into readable text for the AI system prompt.
  * Marks target paths and hold queues for the specified category.
+ *
+ * For DTMF trees: shows IVR prompts and key presses.
+ * For speech trees: only shows what to SAY (omits IVR text to prevent AI from speaking it).
  */
 function formatTreeForPrompt(
   nodes: PhoneTreeNode[],
   targetSlug: string,
-  indent: number = 0
+  indent: number = 0,
+  isSpeechBased: boolean = false
 ): string {
   const pad = "  ".repeat(indent);
   const lines: string[] = [];
 
   for (const node of nodes) {
-    // Show what the IVR says (this is what you HEAR, do NOT speak this)
-    lines.push(`${pad}- HEAR: "${node.prompt}"`);
+    if (isSpeechBased) {
+      // Speech-based: only show actions, never show IVR prompt text
+      if (node.action === "speak" && node.spokenResponse) {
+        const isTarget = node.categoryMatchSlugs?.includes(targetSlug);
+        lines.push(`${pad}- Say "${node.spokenResponse}"${isTarget ? " ← TARGET" : ""}`);
+      } else if (node.action === "dtmf" && node.keys) {
+        lines.push(`${pad}- Press ${node.keys}`);
+      } else if (node.action === "wait" || node.isHoldQueue) {
+        lines.push(`${pad}- Wait silently (hold queue reached)`);
+      }
+    } else {
+      // DTMF-based: show IVR prompts so AI can match menus
+      lines.push(`${pad}- HEAR: "${node.prompt}"`);
 
-    // Show the action (this is what you DO)
-    if (node.action === "dtmf" && node.keys) {
-      lines.push(`${pad}  DO: Press ${node.keys}`);
-    } else if (node.action === "speak" && node.spokenResponse) {
-      lines.push(`${pad}  DO: Say "${node.spokenResponse}"`);
-    } else if (node.action === "wait") {
-      lines.push(`${pad}  DO: Wait silently (do not press anything or speak)`);
-    } else if (node.action === "skip") {
-      lines.push(`${pad}  DO: Ignore this prompt`);
-    }
+      if (node.action === "dtmf" && node.keys) {
+        lines.push(`${pad}  DO: Press ${node.keys}`);
+      } else if (node.action === "speak" && node.spokenResponse) {
+        lines.push(`${pad}  DO: Say "${node.spokenResponse}"`);
+      } else if (node.action === "wait") {
+        lines.push(`${pad}  DO: Wait silently (do not press anything or speak)`);
+      } else if (node.action === "skip") {
+        lines.push(`${pad}  DO: Ignore this prompt`);
+      }
 
-    // Mark target paths
-    if (node.categoryMatchSlugs?.includes(targetSlug)) {
-      lines.push(`${pad}  >>> TARGET PATH`);
-    }
+      if (node.categoryMatchSlugs?.includes(targetSlug)) {
+        lines.push(`${pad}  >>> TARGET PATH`);
+      }
 
-    // Mark hold queues
-    if (node.isHoldQueue) {
-      lines.push(`${pad}  >>> HOLD QUEUE - YOU ARE HERE, WAIT SILENTLY`);
+      if (node.isHoldQueue) {
+        lines.push(`${pad}  >>> HOLD QUEUE - YOU ARE HERE, WAIT SILENTLY`);
+      }
     }
 
     // Recurse into children
     if (node.children && node.children.length > 0) {
-      lines.push(`${pad}  Sub-menu:`);
-      lines.push(formatTreeForPrompt(node.children, targetSlug, indent + 2));
+      if (!isSpeechBased) {
+        lines.push(`${pad}  Sub-menu:`);
+      }
+      lines.push(formatTreeForPrompt(node.children, targetSlug, indent + (isSpeechBased ? 1 : 2), isSpeechBased));
     }
   }
 
@@ -59,18 +74,18 @@ export function buildNavigationPrompt(
   categorySlug: string,
   phoneTree: IspPhoneTreeConfig
 ): string {
-  const treeMap = formatTreeForPrompt(phoneTree.nodes, categorySlug);
+  // Detect if the tree uses speech-based navigation
+  const hasSpeechNodes = phoneTree.nodes.some(
+    (n) => n.action === "speak" || n.children?.some((c) => c.action === "speak")
+  );
+
+  const treeMap = formatTreeForPrompt(phoneTree.nodes, categorySlug, 0, hasSpeechNodes);
 
   const holdPatterns = phoneTree.holdInterruptionPatterns?.length
     ? phoneTree.holdInterruptionPatterns
         .map((p) => `  - "${p}"`)
         .join("\n")
     : '  - "Your call is important to us"\n  - "Please continue to hold"';
-
-  // Detect if the tree uses speech-based navigation
-  const hasSpeechNodes = phoneTree.nodes.some(
-    (n) => n.action === "speak" || n.children?.some((c) => c.action === "speak")
-  );
 
   const sections: string[] = [];
 
@@ -79,25 +94,33 @@ export function buildNavigationPrompt(
     `You are an AI assistant calling ${ispName} customer support. Navigate the phone tree to reach the ${categoryLabel} department queue, then wait on hold for a live human agent.`
   );
 
-  // 2. Phone tree map
-  sections.push(`## Phone Tree Map
+  // 2. What to say / Phone tree map
+  if (hasSpeechNodes) {
+    sections.push(`## What To Say (in order)
+
+When the system asks you a question, follow these steps in order:
+${treeMap}
+
+IMPORTANT: Do NOT say anything other than what is listed above. Wait for the system to ask you a question first, then say ONLY the phrase listed. Never repeat the system's questions back.`);
+  } else {
+    sections.push(`## Phone Tree Map
 
 ${treeMap}`);
+  }
 
   // 3. Navigation rules (adapted for speech vs DTMF IVRs)
   if (hasSpeechNodes) {
     sections.push(`## Navigation Rules
 
-1. LISTEN to each menu prompt fully before responding.
-2. This system uses SPEECH-BASED navigation. When the IVR asks what you need, SAY your request clearly (e.g., "${categoryLabel.toLowerCase()}").
-3. Follow the tree map actions: when it says 'Say "X"', speak that phrase clearly. When it says 'Press X', use the DTMF tool.
-4. If the IVR asks a yes/no confirmation ("Is that correct?"), say "yes" clearly.
-5. If the IVR does not understand you, try rephrasing with a single word (e.g., "billing" instead of "I need help with billing").
-6. If the menu does not match the tree map, LISTEN carefully and respond naturally -- say the option most likely to reach ${categoryLabel}.
-7. If you get stuck after 2 attempts at speaking, try pressing 0 to reach an operator.
-8. If asked for an account number, say "I don't have my account number available."
-9. Do NOT provide any personal information.
-10. RESPOND QUICKLY -- speech-based IVRs will disconnect if they don't hear a response within a few seconds.`);
+1. WAIT for the system to finish speaking before you respond.
+2. When the system asks what you need, say ONLY the phrase from "What To Say" above. Do not add extra words.
+3. If the system asks for more details, say the next phrase from the list.
+4. If the system asks a yes/no confirmation ("Is that correct?"), say "yes".
+5. If the system does not understand, rephrase with a single word (e.g., "billing").
+6. If you get stuck after 2 attempts, say "representative" or press 0.
+7. If asked for an account number, say "I don't have my account number available."
+8. Do NOT provide any personal information.
+9. NEVER repeat back what the system says to you. Only say YOUR responses.`);
   } else {
     sections.push(`## Navigation Rules
 
