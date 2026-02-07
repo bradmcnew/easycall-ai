@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import {
   Phone,
   PhoneOff,
+  PhoneCall,
   Loader2,
   CheckCircle2,
   XCircle,
@@ -88,12 +89,12 @@ const STATUS_DISPLAY: Record<
     description: "A live agent has picked up the phone",
   },
   transferring: {
-    label: "Transferring",
-    description: "Connecting you with the agent",
+    label: "Connecting You...",
+    description: "Calling you back now. Pick up your phone!",
   },
   connected: {
     label: "Connected",
-    description: "You're connected with an agent",
+    description: null, // dynamically uses ISP name
   },
   completed: {
     label: "Complete",
@@ -139,6 +140,26 @@ const ENDED_REASON_DISPLAY: Record<
     label: "Something Went Wrong",
     description: "An error occurred during the call.",
   },
+  "user-no-answer": {
+    label: "Couldn't Reach You",
+    description:
+      "We tried to call you back but couldn't reach you. The agent was notified.",
+  },
+  "bridge-failed": {
+    label: "Connection Failed",
+    description:
+      "We found an agent but couldn't connect the call. You can try again.",
+  },
+  "agent-hung-up": {
+    label: "Agent Disconnected",
+    description:
+      "The agent hung up before we could connect you. You can try again.",
+  },
+  "transfer-failed": {
+    label: "Transfer Failed",
+    description:
+      "Something went wrong during the transfer. You can try again.",
+  },
 };
 
 function getEndedReasonDisplay(reason: string | null): {
@@ -163,9 +184,11 @@ type CallStep = {
 
 const CALL_STEPS: CallStep[] = [
   { key: "dialing", label: "Dialing" },
-  { key: "navigating", label: "Navigating Menu" },
+  { key: "navigating", label: "Navigating" },
   { key: "on_hold", label: "On Hold" },
   { key: "agent_detected", label: "Agent Found" },
+  { key: "transferring", label: "Connecting" },
+  { key: "connected", label: "Connected" },
   { key: "completed", label: "Complete" },
 ];
 
@@ -255,7 +278,10 @@ export function CallStatusClient({
   const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>([]);
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
   const [navDetail, setNavDetail] = useState<string | null>(null);
+  const [connectedAt, setConnectedAt] = useState<string | null>(null);
+  const [connectedSeconds, setConnectedSeconds] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const connectedTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
 
   // ---------- Hold timer ----------
@@ -284,6 +310,31 @@ export function CallStatusClient({
     }
   }, [status, startedAt]);
 
+  // ---------- Connected call timer ----------
+
+  useEffect(() => {
+    if (status === "connected" && connectedAt) {
+      const startTime = new Date(connectedAt).getTime();
+      const now = Date.now();
+      const elapsed = Math.max(0, Math.floor((now - startTime) / 1000));
+      setConnectedSeconds(elapsed);
+
+      connectedTimerRef.current = setInterval(() => {
+        setConnectedSeconds((prev) => prev + 1);
+      }, 1000);
+
+      return () => {
+        if (connectedTimerRef.current)
+          clearInterval(connectedTimerRef.current);
+      };
+    }
+
+    if (connectedTimerRef.current) {
+      clearInterval(connectedTimerRef.current);
+      connectedTimerRef.current = null;
+    }
+  }, [status, connectedAt]);
+
   // ---------- Pusher subscription ----------
 
   useEffect(() => {
@@ -295,6 +346,9 @@ export function CallStatusClient({
       (data: { status: string; detail?: string; timestamp: string }) => {
         setStatus(data.status as CallStatus);
         if (data.detail) setNavDetail(data.detail);
+        if (data.status === "connected") {
+          setConnectedAt(data.timestamp || new Date().toISOString());
+        }
       }
     );
 
@@ -372,7 +426,9 @@ export function CallStatusClient({
   const description =
     status === "dialing"
       ? `Calling ${ispName}...`
-      : statusDisplay.description;
+      : status === "connected"
+        ? `Connected with ${ispName} agent`
+        : statusDisplay.description;
 
   // Calculate call duration for summary
   const durationDisplay = (() => {
@@ -420,10 +476,46 @@ export function CallStatusClient({
         </div>
       )}
 
+      {/* Transferring / Connecting You animation */}
+      {status === "transferring" && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 rounded-xl border-2 border-indigo-500 bg-indigo-50 p-6 text-center dark:bg-indigo-950/30">
+          <div className="flex items-center justify-center gap-3">
+            <PhoneCall className="h-6 w-6 animate-pulse text-indigo-600 dark:text-indigo-400" />
+            <h2 className="text-xl font-bold text-indigo-700 dark:text-indigo-400">
+              Connecting You...
+            </h2>
+          </div>
+          <p className="mt-2 text-sm text-indigo-600 dark:text-indigo-500">
+            Calling you back now. Pick up your phone!
+          </p>
+        </div>
+      )}
+
+      {/* Connected state with timer */}
+      {status === "connected" && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 rounded-xl border-2 border-green-500 bg-green-50 p-6 text-center dark:bg-green-950/30">
+          <div className="flex items-center justify-center gap-2">
+            <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
+            <h2 className="text-xl font-bold text-green-700 dark:text-green-400">
+              Connected
+            </h2>
+          </div>
+          <p className="mt-2 text-sm text-green-600 dark:text-green-500">
+            Connected with {ispName} agent
+          </p>
+          <div className="mt-3 flex items-center justify-center gap-1.5 text-green-700 dark:text-green-400">
+            <Clock className="h-4 w-4" />
+            <span className="text-lg font-semibold tabular-nums">
+              {formatDuration(connectedSeconds)}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Status header */}
       <div className="text-center">
         <div className="flex items-center justify-center gap-2">
-          {isActive && status !== "agent_detected" && (
+          {isActive && status !== "agent_detected" && status !== "transferring" && status !== "connected" && (
             <span className="relative flex h-3 w-3">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
               <span className="relative inline-flex h-3 w-3 rounded-full bg-green-500" />
@@ -573,8 +665,8 @@ export function CallStatusClient({
         </Card>
       )}
 
-      {/* Collapsible transcript panel */}
-      {isActive && transcriptLines.length > 0 && (
+      {/* Collapsible transcript panel (hidden when connected -- AI is off the call) */}
+      {isActive && status !== "connected" && transcriptLines.length > 0 && (
         <div className="space-y-2">
           <button
             onClick={() => setIsTranscriptOpen(!isTranscriptOpen)}
