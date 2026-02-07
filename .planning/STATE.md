@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-06)
 ## Current Position
 
 Phase: 4 of 4 (Transfer & Bridging)
-Plan: 1 of 3 in Phase 4
+Plan: 2 of 3 in Phase 4
 Status: In progress
-Last activity: 2026-02-06 - Completed 04-01-PLAN.md
+Last activity: 2026-02-06 - Completed 04-02-PLAN.md
 
-Progress: [██████████░░] 10/12 (83%)
+Progress: [███████████░] 11/12 (92%)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10
+- Total plans completed: 11
 - Average duration: 5min
-- Total execution time: 0.75 hours
+- Total execution time: 0.79 hours
 
 **By Phase:**
 
@@ -30,11 +30,11 @@ Progress: [██████████░░] 10/12 (83%)
 | 1. Foundation | 3/3 | 14min | 5min |
 | 2. Outbound Calling | 3/3 | 18min | 6min |
 | 3. IVR Navigation | 3/3 | 11min | 4min |
-| 4. Transfer & Bridging | 1/3 | 3min | 3min |
+| 4. Transfer & Bridging | 2/3 | 5min | 3min |
 
 **Recent Trend:**
-- Last 5 plans: 8min, 3min, 3min, 5min, 3min
-- Trend: stable (~4min/plan)
+- Last 5 plans: 3min, 3min, 5min, 3min, 2min
+- Trend: stable (~3min/plan)
 
 *Updated after each plan completion*
 
@@ -72,6 +72,9 @@ Recent decisions affecting current work:
 - Twilio Conference beep param is string type ("false"), not boolean (SDK typing)
 - vapiClient.calls.get() requires { id: string } object, not plain string (SDK v0.11)
 - Conference-bridge fallback uses status-based lookup (most recent transferring call)
+- Query user table for phone at transfer time (avoids migration; join via call.userId FK)
+- Fire-and-forget orchestrateTransfer with void promise (must not block 7.5s Vapi webhook timeout)
+- Guard both status-update and end-of-call-report against overwriting transferring/connected statuses
 
 ### Pending Todos
 
@@ -85,5 +88,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 04-01-PLAN.md
+Stopped at: Completed 04-02-PLAN.md
 Resume file: None
