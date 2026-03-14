@@ -31,7 +31,7 @@ export default async function SelectIssuePage({ searchParams }: SelectIssuePageP
     .orderBy(issueCategory.sortOrder);
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
       <div className="text-center">
         <h1 className="text-2xl font-bold tracking-tight">
           {ispRecord.name} &mdash; What do you need help with?

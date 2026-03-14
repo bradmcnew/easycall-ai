@@ -78,7 +78,7 @@ function VerifyContent() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
+    <div className="flex w-full flex-col items-center bg-background">
       <div className="w-full max-w-sm space-y-8">
         <div className="space-y-2 text-center">
           <h1 className="text-3xl font-bold tracking-tight">Verify your phone</h1>
@@ -132,7 +132,7 @@ export default function VerifyPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center">
+        <div className="flex items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
       }

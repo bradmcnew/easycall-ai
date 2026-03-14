@@ -6,7 +6,7 @@ export default async function SelectIspPage() {
   const isps = await db.select().from(isp);
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
       <div className="text-center">
         <h1 className="text-2xl font-bold tracking-tight">
           Who&apos;s your internet provider?

@@ -50,7 +50,7 @@ export default async function ConfirmPage({ searchParams }: ConfirmPageProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
       <div className="text-center">
         <h1 className="text-2xl font-bold tracking-tight">
           Review your selections

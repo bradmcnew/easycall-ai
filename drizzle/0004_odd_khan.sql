@@ -1,0 +1,1 @@
+ALTER TABLE "call" ADD COLUMN "vapi_listen_url" text;

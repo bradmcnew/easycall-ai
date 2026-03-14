@@ -6,18 +6,17 @@
  * initiate the transfer. The transfer assistant and fallbackPlan handle
  * timeout and failure cases automatically.
  */
-export function getStallInstructions(userName: string): string {
+export function getStallInstructions(_userName: string): string {
   return `Human agent detected. You must do two things in order:
 
-STEP 1 - Introduce yourself (speak this NOW):
-"Hi, I'm an automated assistant calling on behalf of ${userName}. Please hold for just a moment while I connect them."
+STEP 1 - Say this NOW:
+"One second please."
 
 STEP 2 - IMMEDIATELY call the transferCall tool.
-Do not wait. Do not ask questions. Call transferCall right after introducing yourself.
+Do not wait. Do not ask questions. Call transferCall right after speaking.
 
 If the agent says anything before the transfer initiates, respond briefly:
-"They'll be connected momentarily."
+"One moment please."
 
-Do NOT provide any personal information, account numbers, or identifying details.
-Do NOT impersonate the customer.`;
+Do NOT provide any personal information, account numbers, or identifying details.`;
 }

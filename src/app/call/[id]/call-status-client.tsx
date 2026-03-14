@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { LiveAudioPlayer } from "@/components/live-audio-player";
 import {
   Phone,
   PhoneOff,
@@ -52,6 +53,7 @@ interface CallStatusClientProps {
   endedReason: string | null;
   ispSlug: string;
   categorySlug: string;
+  listenUrl: string | null;
 }
 
 // ---------- Transcript types ----------
@@ -263,6 +265,7 @@ export function CallStatusClient({
   endedReason: initialEndedReason,
   ispSlug,
   categorySlug,
+  listenUrl,
 }: CallStatusClientProps) {
   const router = useRouter();
 
@@ -270,7 +273,7 @@ export function CallStatusClient({
   const [endedReason, setEndedReason] = useState<string | null>(
     initialEndedReason
   );
-  const [startedAt] = useState<string | null>(initialStartedAt);
+  const [startedAt, setStartedAt] = useState<string | null>(initialStartedAt);
   const [endedAt, setEndedAt] = useState<string | null>(initialEndedAt);
   const [isConnected, setIsConnected] = useState(true);
   const [isCancelling, setIsCancelling] = useState(false);
@@ -346,6 +349,9 @@ export function CallStatusClient({
       (data: { status: string; detail?: string; timestamp: string }) => {
         setStatus(data.status as CallStatus);
         if (data.detail) setNavDetail(data.detail);
+        if (data.status === "dialing" || data.status === "navigating") {
+          setStartedAt((prev) => prev ?? (data.timestamp || new Date().toISOString()));
+        }
         if (data.status === "connected") {
           setConnectedAt(data.timestamp || new Date().toISOString());
         }
@@ -418,6 +424,7 @@ export function CallStatusClient({
   // ---------- Computed values ----------
 
   const isActive = isActiveStatus(status);
+  const isListenable = isActive && status !== ("connected" as CallStatus);
   const isEnded = status === "completed" || status === "failed";
   const isFailed = status === "failed" || (isEnded && endedReason && endedReason !== "manually-canceled" && !["completed"].includes(endedReason));
   const showSummary = isEnded;
@@ -449,7 +456,7 @@ export function CallStatusClient({
     status !== "completed";
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
       {/* Reconnecting banner */}
       {!isConnected && (
         <div className="flex items-center justify-center gap-2 rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-700 dark:bg-amber-950/50 dark:text-amber-400">
@@ -592,6 +599,13 @@ export function CallStatusClient({
         <div className="flex items-center justify-center gap-1.5 text-muted-foreground">
           <Clock className="h-3.5 w-3.5" />
           <span className="text-sm tabular-nums">{formatDuration(holdSeconds)}</span>
+        </div>
+      )}
+
+      {/* Live audio monitoring */}
+      {listenUrl && isListenable && (
+        <div className="flex justify-center">
+          <LiveAudioPlayer listenUrl={listenUrl} isActive={isListenable} />
         </div>
       )}
 

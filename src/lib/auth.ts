@@ -7,6 +7,7 @@ import { sendPhoneOTP, verifyPhoneOTP } from "@/lib/twilio";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg" }),
+  trustedOrigins: ["http://localhost:3000", "https://672d-35-3-219-225.ngrok-free.app"],
   plugins: [
     phoneNumber({
       sendOTP: async ({ phoneNumber }) => {

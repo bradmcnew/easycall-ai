@@ -27,6 +27,7 @@ export default async function CallPage({ params }: CallPageProps) {
       callStatus: call.status,
       callUserId: call.userId,
       userNote: call.userNote,
+      vapiListenUrl: call.vapiListenUrl,
       startedAt: call.startedAt,
       endedAt: call.endedAt,
       endedReason: call.endedReason,
@@ -59,6 +60,7 @@ export default async function CallPage({ params }: CallPageProps) {
       endedReason={result.endedReason}
       ispSlug={result.ispSlug}
       categorySlug={result.categorySlug}
+      listenUrl={result.vapiListenUrl}
     />
   );
 }

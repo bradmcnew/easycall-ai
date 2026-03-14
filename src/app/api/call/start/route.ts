@@ -125,8 +125,8 @@ export async function POST(req: Request) {
         assistant: {
           name: `EasyCallAI - ${ispRecord.name}`,
           model: {
-            provider: "openai",
-            model: "gpt-4o-mini",
+            provider: "google",
+            model: "gemini-3-flash-preview" as any,
             messages: [
               {
                 role: "system",
@@ -137,7 +137,7 @@ export async function POST(req: Request) {
               { type: "dtmf" },
               {
                 type: "function",
-                async: true,
+                async: false,
                 function: {
                   name: "human_detected",
                   description:
@@ -228,18 +228,20 @@ If the user doesn't respond after your greeting, wait 3 seconds then call transf
               } as any,
             ] as any,
           },
-          voice: { provider: "vapi", voiceId: "Elliot" },
+          voice: { provider: "vapi", voiceId: "Elliot", speed: 0.85 },
           transcriber: { provider: "deepgram", model: "nova-2", language: "en" },
           firstMessage: " ",
           firstMessageMode: "assistant-speaks-first",
           // silenceTimeoutSeconds is accepted by the API but not typed in SDK v0.11
           ...({ silenceTimeoutSeconds: 3600 } as Record<string, unknown>),
-          // Smart endpointing: slower during IVR (first 30s), faster for human conversation
+          // Smart endpointing: 4.5s wait during IVR (first 45s), then fast for human
           ...({
+            backchannelingEnabled: false,
+            backgroundSound: "off",
             startSpeakingPlan: {
               smartEndpointingPlan: {
                 provider: "livekit",
-                waitFunction: "t < 30 ? (x * 500 + 300) : (20 + 500 * sqrt(x) + 2500 * x^3)",
+                waitFunction: "t < 45 ? 4500 : 1000",
               },
             },
           } as Record<string, unknown>),
@@ -262,12 +264,14 @@ If the user doesn't respond after your greeting, wait 3 seconds then call transf
 
       // Update call record with Vapi call ID and control URL
       const controlUrl = vapiCall.monitor?.controlUrl ?? null;
+      const listenUrl = vapiCall.monitor?.listenUrl ?? null;
 
       await db
         .update(call)
         .set({
           vapiCallId: vapiCall.id,
           vapiControlUrl: controlUrl,
+          vapiListenUrl: listenUrl,
           updatedAt: new Date(),
         })
         .where(eq(call.id, callRecord.id));
