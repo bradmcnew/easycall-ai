@@ -24,7 +24,7 @@ export function IspCard({ isp, className }: IspCardProps) {
           className
         )}
       >
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex items-center justify-center">
           <div className="relative h-12 w-32">
             <Image
               src={isp.logoUrl}
@@ -33,7 +33,6 @@ export function IspCard({ isp, className }: IspCardProps) {
               className="object-contain"
             />
           </div>
-          <span className="text-sm font-medium text-foreground">{isp.name}</span>
         </div>
       </Card>
     </Link>

@@ -2,7 +2,7 @@ export const ISP_DATA = [
   {
     slug: "comcast",
     name: "Comcast",
-    logoUrl: "/logos/comcast.svg",
+    logoUrl: "/logos/comcast.png",
     supportPhone: "+18009346489",
     categories: [
       {
@@ -63,7 +63,7 @@ export const ISP_DATA = [
   {
     slug: "spectrum",
     name: "Spectrum",
-    logoUrl: "/logos/spectrum.svg",
+    logoUrl: "/logos/spectrum.png",
     supportPhone: "+18339490036",
     categories: [
       {
@@ -96,7 +96,7 @@ export const ISP_DATA = [
   {
     slug: "verizon",
     name: "Verizon",
-    logoUrl: "/logos/verizon.svg",
+    logoUrl: "/logos/verizon.png",
     supportPhone: "+18009220204",
     categories: [
       {
@@ -129,7 +129,7 @@ export const ISP_DATA = [
   {
     slug: "cox",
     name: "Cox",
-    logoUrl: "/logos/cox.svg",
+    logoUrl: "/logos/cox.png",
     supportPhone: "+18002343993",
     categories: [
       {

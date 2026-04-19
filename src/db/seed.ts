@@ -8,8 +8,12 @@ import { ISP_DATA } from "../data/isps";
 import { PHONE_TREE_DATA } from "../data/phone-trees";
 
 async function seed() {
+  const connectionString = process.env.DATABASE_URL!;
   const pool = new Pool({
-    connectionString: process.env.DATABASE_URL!,
+    connectionString,
+    ...(connectionString && !connectionString.includes("@localhost")
+      ? { ssl: { rejectUnauthorized: false } }
+      : {}),
   });
   const db = drizzle(pool);
 
@@ -38,10 +42,10 @@ async function seed() {
         .from(isp)
         .where(eq(isp.slug, ispData.slug));
       ispId = existing[0].id;
-      // Update supportPhone for existing ISPs
+      // Update supportPhone and logoUrl for existing ISPs
       await db
         .update(isp)
-        .set({ supportPhone: ispData.supportPhone })
+        .set({ supportPhone: ispData.supportPhone, logoUrl: ispData.logoUrl })
         .where(eq(isp.slug, ispData.slug));
     }
 
