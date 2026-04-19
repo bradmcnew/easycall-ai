@@ -118,94 +118,105 @@ export async function POST(req: Request) {
       .returning();
 
     // Call Vapi to create outbound call with transient assistant
+    // Try Vapi's free number first, fall back to Twilio number on failure
+    const phoneNumbers = [
+      process.env.VAPI_PHONE_NUMBER_ID!,
+      process.env.VAPI_FALLBACK_PHONE_NUMBER_ID,
+    ].filter(Boolean) as string[];
+
     try {
-      const vapiCall = await vapiClient.calls.create({
-        phoneNumberId: process.env.VAPI_PHONE_NUMBER_ID!,
-        customer: { number: ispRecord.supportPhone },
-        assistant: {
-          name: `EasyCallAI - ${ispRecord.name}`,
-          model: {
-            provider: "google",
-            model: "gemini-3-flash-preview" as any,
-            messages: [
-              {
-                role: "system",
-                content: systemPrompt,
-              },
-            ],
-            tools: [
-              { type: "dtmf" },
-              {
-                type: "function",
-                async: false,
-                function: {
-                  name: "human_detected",
-                  description:
-                    "Call this ONLY when you are confident a live human agent has answered. Do NOT call for automated messages, hold music interruptions, or IVR prompts.",
-                  parameters: {
-                    type: "object",
-                    properties: {
-                      confidence: {
-                        type: "string",
-                        enum: ["high", "medium"],
-                        description:
-                          "Your confidence level that this is a live human",
-                      },
-                      agentGreeting: {
-                        type: "string",
-                        description:
-                          "What the agent said that indicated they are human",
-                      },
-                    },
-                    required: ["confidence"],
-                  },
-                },
-              },
-              {
-                type: "function",
-                async: true,
-                function: {
-                  name: "navigation_status",
-                  description:
-                    "Report your current navigation status. Call when you enter a new menu level or reach a hold queue.",
-                  parameters: {
-                    type: "object",
-                    properties: {
-                      status: {
-                        type: "string",
-                        enum: ["navigating", "reached_queue", "on_hold", "stuck"],
-                      },
-                      detail: {
-                        type: "string",
-                        description:
-                          "Brief description (e.g., 'Selected billing option', 'Entered hold queue')",
-                      },
-                    },
-                    required: ["status"],
-                  },
-                },
-              },
-              {
-                type: "transferCall",
-                destinations: [
+      let vapiCall;
+      let lastError: unknown;
+
+      for (const phoneNumberId of phoneNumbers) {
+        try {
+          vapiCall = await vapiClient.calls.create({
+            phoneNumberId,
+            customer: { number: ispRecord.supportPhone },
+            assistant: {
+              name: `EasyCallAI - ${ispRecord.name}`,
+              model: {
+                provider: "google",
+                model: "gemini-3-flash-preview" as any,
+                messages: [
                   {
-                    type: "number",
-                    number: userRecord.phoneNumber,
-                    message: "",
-                    transferPlan: {
-                      mode: "warm-transfer-experimental",
-                      transferAssistant: {
-                        firstMessage: "Hi! Your ISP agent is on the line. Connecting you now.",
-                        firstMessageMode: "assistant-speaks-first",
-                        maxDurationSeconds: 45,
-                        silenceTimeoutSeconds: 20,
-                        model: {
-                          provider: "openai",
-                          model: "gpt-4o-mini",
-                          messages: [
-                            {
-                              role: "system",
-                              content: `You are connecting a user to their ISP customer service agent. The agent is already on hold. Your ONLY job is:
+                    role: "system",
+                    content: systemPrompt,
+                  },
+                ],
+                tools: [
+                  { type: "dtmf" },
+                  {
+                    type: "function",
+                    async: false,
+                    function: {
+                      name: "human_detected",
+                      description:
+                        "Call this ONLY when you are confident a live human agent has answered. Do NOT call for automated messages, hold music interruptions, or IVR prompts.",
+                      parameters: {
+                        type: "object",
+                        properties: {
+                          confidence: {
+                            type: "string",
+                            enum: ["high", "medium"],
+                            description:
+                              "Your confidence level that this is a live human",
+                          },
+                          agentGreeting: {
+                            type: "string",
+                            description:
+                              "What the agent said that indicated they are human",
+                          },
+                        },
+                        required: ["confidence"],
+                      },
+                    },
+                  },
+                  {
+                    type: "function",
+                    async: true,
+                    function: {
+                      name: "navigation_status",
+                      description:
+                        "Report your current navigation status. Call when you enter a new menu level or reach a hold queue.",
+                      parameters: {
+                        type: "object",
+                        properties: {
+                          status: {
+                            type: "string",
+                            enum: ["navigating", "reached_queue", "on_hold", "stuck"],
+                          },
+                          detail: {
+                            type: "string",
+                            description:
+                              "Brief description (e.g., 'Selected billing option', 'Entered hold queue')",
+                          },
+                        },
+                        required: ["status"],
+                      },
+                    },
+                  },
+                  {
+                    type: "transferCall",
+                    destinations: [
+                      {
+                        type: "number",
+                        number: userRecord.phoneNumber,
+                        message: "",
+                        transferPlan: {
+                          mode: "warm-transfer-experimental",
+                          transferAssistant: {
+                            firstMessage: "Hi! Your ISP agent is on the line. Connecting you now.",
+                            firstMessageMode: "assistant-speaks-first",
+                            maxDurationSeconds: 45,
+                            silenceTimeoutSeconds: 20,
+                            model: {
+                              provider: "openai",
+                              model: "gpt-4o-mini",
+                              messages: [
+                                {
+                                  role: "system",
+                                  content: `You are connecting a user to their ISP customer service agent. The agent is already on hold. Your ONLY job is:
 1. Briefly confirm the user is there
 2. Call transferSuccessful IMMEDIATELY
 
@@ -213,49 +224,60 @@ Do NOT ask questions or have a conversation.
 If the user says anything, call transferSuccessful.
 If you hear voicemail or an automated system, call transferCancel.
 If the user doesn't respond after your greeting, wait 3 seconds then call transferSuccessful anyway.`,
+                                },
+                              ],
                             },
-                          ],
+                          },
+                          fallbackPlan: {
+                            message: "I'm sorry, they're unavailable right now. We'll call back later. Thank you!",
+                            endCallEnabled: true,
+                          },
+                          contextEngineeringPlan: { type: "none" },
                         },
-                      },
-                      fallbackPlan: {
-                        message: "I'm sorry, they're unavailable right now. We'll call back later. Thank you!",
-                        endCallEnabled: true,
-                      },
-                      contextEngineeringPlan: { type: "none" },
-                    },
+                      } as any,
+                    ],
                   } as any,
-                ],
-              } as any,
-            ] as any,
-          },
-          voice: { provider: "vapi", voiceId: "Elliot", speed: 0.85 },
-          transcriber: { provider: "deepgram", model: "nova-2", language: "en" },
-          firstMessage: " ",
-          firstMessageMode: "assistant-speaks-first",
-          // silenceTimeoutSeconds is accepted by the API but not typed in SDK v0.11
-          ...({ silenceTimeoutSeconds: 3600 } as Record<string, unknown>),
-          // Smart endpointing: 4.5s wait during IVR (first 45s), then fast for human
-          ...({
-            backchannelingEnabled: false,
-            backgroundSound: "off",
-            startSpeakingPlan: {
-              smartEndpointingPlan: {
-                provider: "livekit",
-                waitFunction: "t < 45 ? 4500 : 1000",
+                ] as any,
+              },
+              voice: { provider: "vapi", voiceId: "Elliot", speed: 0.85 },
+              transcriber: { provider: "deepgram", model: "nova-2", language: "en" },
+              firstMessage: " ",
+              firstMessageMode: "assistant-speaks-first",
+              // silenceTimeoutSeconds is accepted by the API but not typed in SDK v0.11
+              ...({ silenceTimeoutSeconds: 3600 } as Record<string, unknown>),
+              // Smart endpointing: 4.5s wait during IVR (first 45s), then fast for human
+              ...({
+                backchannelingEnabled: false,
+                backgroundSound: "off",
+                startSpeakingPlan: {
+                  smartEndpointingPlan: {
+                    provider: "livekit",
+                    waitFunction: "t < 45 ? 4500 : 1000",
+                  },
+                },
+              } as Record<string, unknown>),
+              maxDurationSeconds: 2700,
+              serverMessages: ["status-update", "end-of-call-report", "hang", "tool-calls", "transcript", "transfer-update"],
+              server: {
+                url: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/vapi`,
+                timeoutSeconds: 20,
+                headers: {
+                  "x-vapi-secret": process.env.VAPI_WEBHOOK_SECRET!,
+                },
               },
             },
-          } as Record<string, unknown>),
-          maxDurationSeconds: 2700,
-          serverMessages: ["status-update", "end-of-call-report", "hang", "tool-calls", "transcript", "transfer-update"],
-          server: {
-            url: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/vapi`,
-            timeoutSeconds: 20,
-            headers: {
-              "x-vapi-secret": process.env.VAPI_WEBHOOK_SECRET!,
-            },
-          },
-        },
-      });
+          });
+          break; // Success — stop trying phone numbers
+        } catch (err) {
+          lastError = err;
+          console.warn(`Call failed with phone number ${phoneNumberId}, trying next...`, err);
+          continue;
+        }
+      }
+
+      if (!vapiCall) {
+        throw lastError ?? new Error("All phone numbers failed");
+      }
 
       // Narrow response type -- single call returns Call, batch returns CallBatchResponse
       if (!("id" in vapiCall)) {
@@ -285,7 +307,7 @@ If the user doesn't respond after your greeting, wait 3 seconds then call transf
 
       return NextResponse.json({ callId: callRecord.id }, { status: 201 });
     } catch (vapiError) {
-      // Vapi call creation failed -- mark call as failed
+      // All phone numbers failed -- mark call as failed
       await db
         .update(call)
         .set({
