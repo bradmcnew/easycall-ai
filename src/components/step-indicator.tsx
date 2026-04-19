@@ -20,8 +20,8 @@ function getStepIndex(pathname: string): number {
 export function StepIndicator() {
   const pathname = usePathname();
 
-  // Hide on call status pages -- different UX context (monitoring, not setup)
-  if (pathname.startsWith("/call")) return null;
+  // Hide on call status and history pages -- different UX context
+  if (pathname.startsWith("/call") || pathname.startsWith("/history")) return null;
 
   const currentStep = getStepIndex(pathname);
 

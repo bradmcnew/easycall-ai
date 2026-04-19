@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 
-const protectedRoutes = ["/select-isp", "/select-issue", "/confirm", "/call"];
+const protectedRoutes = ["/select-isp", "/select-issue", "/confirm", "/call", "/history"];
 
 // Routes where we check for an active call and redirect
 const activeCallCheckRoutes = ["/select-isp", "/select-issue", "/confirm"];
@@ -50,5 +50,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/select-isp", "/select-issue", "/confirm", "/call/:path*"],
+  matcher: ["/select-isp", "/select-issue", "/confirm", "/call/:path*", "/history"],
 };

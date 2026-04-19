@@ -764,6 +764,16 @@ export function CallStatusClient({
             </Link>
           </Button>
         )}
+
+        {/* View call history */}
+        {isEnded && (
+          <Button variant="ghost" asChild className="w-full">
+            <Link href="/history">
+              <Clock />
+              View All Calls
+            </Link>
+          </Button>
+        )}
       </div>
     </div>
   );

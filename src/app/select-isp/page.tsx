@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { db } from "@/db";
 import { isp } from "@/db/schema";
 import { IspCard } from "@/components/isp-card";
@@ -20,6 +21,15 @@ export default async function SelectIspPage() {
         {isps.map((ispItem) => (
           <IspCard key={ispItem.id} isp={ispItem} />
         ))}
+      </div>
+
+      <div className="text-center">
+        <Link
+          href="/history"
+          className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+        >
+          View call history
+        </Link>
       </div>
     </div>
   );
