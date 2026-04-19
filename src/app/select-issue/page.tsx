@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { isp, issueCategory } from "@/db/schema";
@@ -32,13 +33,23 @@ export default async function SelectIssuePage({ searchParams }: SelectIssuePageP
 
   return (
     <div className="w-full space-y-6">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight">
-          {ispRecord.name} &mdash; What do you need help with?
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Select the issue that best describes your problem
-        </p>
+      <div className="flex flex-col items-center gap-3">
+        <div className="relative h-10 w-28">
+          <Image
+            src={ispRecord.logoUrl}
+            alt={`${ispRecord.name} logo`}
+            fill
+            className="object-contain"
+          />
+        </div>
+        <div className="text-center">
+          <h1 className="text-2xl font-bold tracking-tight">
+            What do you need help with?
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Select the issue that best describes your problem
+          </p>
+        </div>
       </div>
 
       <SelectIssueForm
