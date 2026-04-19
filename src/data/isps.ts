@@ -183,3 +183,8 @@ export const ISP_DATA = [
     ],
   },
 ] as const;
+
+/** Map ISP slug → logo URL from static data (avoids stale DB values) */
+export const ISP_LOGOS: Record<string, string> = Object.fromEntries(
+  ISP_DATA.map((i) => [i.slug, i.logoUrl])
+);

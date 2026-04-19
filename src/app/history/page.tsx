@@ -4,6 +4,7 @@ import { desc, eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { call, isp, issueCategory } from "@/db/schema";
+import { ISP_LOGOS } from "@/data/isps";
 import { HistoryClient } from "./history-client";
 
 export default async function HistoryPage() {
@@ -40,6 +41,7 @@ export default async function HistoryPage() {
     <HistoryClient
       calls={calls.map((c) => ({
         ...c,
+        ispLogoUrl: ISP_LOGOS[c.ispSlug] ?? c.ispLogoUrl,
         createdAt: c.createdAt.toISOString(),
         startedAt: c.startedAt?.toISOString() ?? null,
         endedAt: c.endedAt?.toISOString() ?? null,

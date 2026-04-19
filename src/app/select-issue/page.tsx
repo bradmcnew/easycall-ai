@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { isp, issueCategory } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { ISP_LOGOS } from "@/data/isps";
 import { SelectIssueForm } from "./select-issue-form";
 
 interface SelectIssuePageProps {
@@ -36,7 +37,7 @@ export default async function SelectIssuePage({ searchParams }: SelectIssuePageP
       <div className="flex flex-col items-center gap-3">
         <div className="relative h-10 w-28">
           <Image
-            src={ispRecord.logoUrl}
+            src={ISP_LOGOS[ispRecord.slug] ?? ispRecord.logoUrl}
             alt={`${ispRecord.name} logo`}
             fill
             className="object-contain"

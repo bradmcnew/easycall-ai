@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { isp, issueCategory } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
+import { ISP_LOGOS } from "@/data/isps";
 import {
   Card,
   CardContent,
@@ -80,7 +81,7 @@ export default async function ConfirmPage({ searchParams }: ConfirmPageProps) {
             <div className="flex items-center gap-3">
               <div className="relative h-8 w-20">
                 <Image
-                  src={ispRecord.logoUrl}
+                  src={ISP_LOGOS[ispRecord.slug] ?? ispRecord.logoUrl}
                   alt={`${ispRecord.name} logo`}
                   fill
                   className="object-contain"

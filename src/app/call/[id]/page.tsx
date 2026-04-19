@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { call, isp, issueCategory } from "@/db/schema";
+import { ISP_LOGOS } from "@/data/isps";
 import { CallStatusClient } from "./call-status-client";
 
 interface CallPageProps {
@@ -52,7 +53,7 @@ export default async function CallPage({ params }: CallPageProps) {
       callId={result.callId}
       initialStatus={result.callStatus}
       ispName={result.ispName}
-      ispLogoUrl={result.ispLogoUrl}
+      ispLogoUrl={ISP_LOGOS[result.ispSlug] ?? result.ispLogoUrl}
       categoryLabel={result.categoryLabel}
       userNote={result.userNote}
       startedAt={result.startedAt?.toISOString() ?? null}
