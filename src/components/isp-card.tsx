@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 
 interface IspCardProps {
   isp: {
-    id: string;
     slug: string;
     name: string;
     logoUrl: string;

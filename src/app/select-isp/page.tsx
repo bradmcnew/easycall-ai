@@ -1,13 +1,8 @@
 import Link from "next/link";
-import { db } from "@/db";
-import { isp } from "@/db/schema";
+import { ISP_DATA } from "@/data/isps";
 import { IspCard } from "@/components/isp-card";
 
-export const dynamic = "force-dynamic";
-
-export default async function SelectIspPage() {
-  const isps = await db.select().from(isp);
-
+export default function SelectIspPage() {
   return (
     <div className="w-full space-y-6">
       <div className="text-center">
@@ -20,8 +15,8 @@ export default async function SelectIspPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-        {isps.map((ispItem) => (
-          <IspCard key={ispItem.id} isp={ispItem} />
+        {ISP_DATA.map((ispItem) => (
+          <IspCard key={ispItem.slug} isp={ispItem} />
         ))}
       </div>
 
