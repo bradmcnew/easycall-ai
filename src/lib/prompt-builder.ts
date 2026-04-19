@@ -8,7 +8,8 @@ export function buildNavigationPrompt(
   ispName: string,
   categoryLabel: string,
   _categorySlug: string,
-  phoneTree: { holdInterruptionPatterns?: string[]; navigationNotes?: string } | null
+  phoneTree: { holdInterruptionPatterns?: string[]; navigationNotes?: string } | null,
+  accountDetails?: { accountNumber?: string; zipCode?: string; address?: string }
 ): string {
   const holdPatterns = phoneTree?.holdInterruptionPatterns?.length
     ? phoneTree.holdInterruptionPatterns
@@ -16,9 +17,22 @@ export function buildNavigationPrompt(
         .join("\n")
     : '  - "Your call is important to us"\n  - "Please continue to hold"';
 
+  const hasAccount = accountDetails?.accountNumber;
+  const hasZip = accountDetails?.zipCode;
+  const hasAddress = accountDetails?.address;
+  const hasAnyDetails = hasAccount || hasZip || hasAddress;
+
+  const accountSection = hasAnyDetails
+    ? `The customer has provided the following account details. Use them ONLY when the IVR explicitly asks for them:
+${hasAccount ? `  - Account number: ${accountDetails.accountNumber}` : ""}
+${hasZip ? `  - ZIP code: ${accountDetails.zipCode}` : ""}
+${hasAddress ? `  - Service address: ${accountDetails.address}` : ""}
+For any details NOT listed above, say you don't have them or use the skip option the IVR offers. NEVER make up or guess information. When the IVR asks for confirmation ('Is that right?'), say 'yes' if it understood your input correctly.`.trim()
+    : `The customer does not have their account number, phone number, or ZIP code on file. When the IVR asks for any of these details, say you don't have them or use the skip option the IVR offers (e.g., "I don't have an account", "I don't know it"). NEVER make up or guess account numbers, phone numbers, or ZIP codes. When the IVR asks for confirmation ('Is that right?'), say 'yes' if it understood your intent correctly. Do not share any personal information.`;
+
   return `You are an autonomous agent calling ${ispName} on behalf of a customer who needs help with ${categoryLabel.toLowerCase()}. Navigate their phone system to reach the right department, then wait on hold for a live human agent.
 
-The customer does not have their account number, phone number, or ZIP code on file. When the IVR asks for any of these details, say you don't have them or use the skip option the IVR offers (e.g., "I don't have an account", "I don't know it"). NEVER make up or guess account numbers, phone numbers, or ZIP codes. When the IVR asks for confirmation ('Is that right?'), say 'yes' if it understood your intent correctly. Do not share any personal information.
+${accountSection}
 
 [When waiting or listening]
 - Reply with a single space " " to stay silent. Use this for welcome messages, disclaimers, hold music, and any time you are not being asked a direct question.

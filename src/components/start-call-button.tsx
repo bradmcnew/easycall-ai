@@ -10,12 +10,18 @@ interface StartCallButtonProps {
   ispId: string;
   issueCategoryId: string;
   userNote?: string;
+  accountNumber?: string;
+  zipCode?: string;
+  address?: string;
 }
 
 export function StartCallButton({
   ispId,
   issueCategoryId,
   userNote,
+  accountNumber,
+  zipCode,
+  address,
 }: StartCallButtonProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -27,7 +33,7 @@ export function StartCallButton({
       const res = await fetch("/api/call/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ispId, issueCategoryId, userNote }),
+        body: JSON.stringify({ ispId, issueCategoryId, userNote, accountNumber, zipCode, address }),
       });
 
       const data = await res.json();

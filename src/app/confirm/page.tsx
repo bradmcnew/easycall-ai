@@ -13,7 +13,14 @@ import {
 import { StartCallButton } from "@/components/start-call-button";
 
 interface ConfirmPageProps {
-  searchParams: Promise<{ isp?: string; category?: string; note?: string }>;
+  searchParams: Promise<{
+    isp?: string;
+    category?: string;
+    note?: string;
+    account?: string;
+    zip?: string;
+    address?: string;
+  }>;
 }
 
 export default async function ConfirmPage({ searchParams }: ConfirmPageProps) {
@@ -21,6 +28,9 @@ export default async function ConfirmPage({ searchParams }: ConfirmPageProps) {
   const ispSlug = params.isp;
   const categorySlug = params.category;
   const note = params.note;
+  const accountNumber = params.account;
+  const zipCode = params.zip;
+  const address = params.address;
 
   if (!ispSlug || !categorySlug) {
     redirect("/select-isp");
@@ -128,6 +138,33 @@ export default async function ConfirmPage({ searchParams }: ConfirmPageProps) {
               </div>
             </>
           )}
+
+          {/* Account details */}
+          {(accountNumber || zipCode || address) && (
+            <>
+              <div className="border-t" />
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Account details</p>
+                  {accountNumber && (
+                    <p className="text-sm">Account: {decodeURIComponent(accountNumber)}</p>
+                  )}
+                  {zipCode && (
+                    <p className="text-sm">ZIP: {decodeURIComponent(zipCode)}</p>
+                  )}
+                  {address && (
+                    <p className="text-sm">Address: {decodeURIComponent(address)}</p>
+                  )}
+                </div>
+                <Link
+                  href={`/select-issue?isp=${ispSlug}`}
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  Edit
+                </Link>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
@@ -135,6 +172,9 @@ export default async function ConfirmPage({ searchParams }: ConfirmPageProps) {
         ispId={ispRecord.id}
         issueCategoryId={categoryRecord.id}
         userNote={note ? decodeURIComponent(note) : undefined}
+        accountNumber={accountNumber ? decodeURIComponent(accountNumber) : undefined}
+        zipCode={zipCode ? decodeURIComponent(zipCode) : undefined}
+        address={address ? decodeURIComponent(address) : undefined}
       />
     </div>
   );

@@ -12,6 +12,9 @@ const startCallSchema = z.object({
   ispId: z.string().uuid(),
   issueCategoryId: z.string().uuid(),
   userNote: z.string().optional(),
+  accountNumber: z.string().optional(),
+  zipCode: z.string().optional(),
+  address: z.string().optional(),
 });
 
 export async function POST(req: Request) {
@@ -45,7 +48,7 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-    const { ispId, issueCategoryId, userNote } = parsed.data;
+    const { ispId, issueCategoryId, userNote, accountNumber, zipCode, address } = parsed.data;
 
     // Check for existing active call
     const existingCall = await db.query.call.findFirst({
@@ -102,7 +105,8 @@ export async function POST(req: Request) {
       ispRecord.name,
       categoryRecord.label,
       categoryRecord.slug,
-      phoneTreeRecord?.tree ?? null
+      phoneTreeRecord?.tree ?? null,
+      { accountNumber, zipCode, address }
     );
 
     // Create call record BEFORE calling Vapi (prevents webhook race condition)

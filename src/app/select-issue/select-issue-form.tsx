@@ -23,6 +23,9 @@ export function SelectIssueForm({ ispSlug, ispName, categories }: SelectIssueFor
   const router = useRouter();
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [note, setNote] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [zipCode, setZipCode] = useState("");
+  const [address, setAddress] = useState("");
 
   const selectedCategory = categories.find((c) => c.slug === selectedSlug);
 
@@ -32,9 +35,10 @@ export function SelectIssueForm({ ispSlug, ispName, categories }: SelectIssueFor
       isp: ispSlug,
       category: selectedSlug,
     });
-    if (note.trim()) {
-      params.set("note", note.trim());
-    }
+    if (note.trim()) params.set("note", note.trim());
+    if (accountNumber.trim()) params.set("account", accountNumber.trim());
+    if (zipCode.trim()) params.set("zip", zipCode.trim());
+    if (address.trim()) params.set("address", address.trim());
     router.push(`/confirm?${params.toString()}`);
   }
 
@@ -82,6 +86,56 @@ export function SelectIssueForm({ ispSlug, ispName, categories }: SelectIssueFor
           rows={3}
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
         />
+      </div>
+
+      {/* Account details (optional) */}
+      <div className="space-y-3">
+        <p className="text-sm font-medium text-foreground">
+          Account details{" "}
+          <span className="font-normal text-muted-foreground">(optional — helps the AI navigate faster)</span>
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="col-span-2 sm:col-span-1">
+            <label htmlFor="account-number" className="text-xs text-muted-foreground">
+              Account number
+            </label>
+            <input
+              id="account-number"
+              type="text"
+              value={accountNumber}
+              onChange={(e) => setAccountNumber(e.target.value)}
+              placeholder="e.g., 8001234567"
+              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            />
+          </div>
+          <div className="col-span-2 sm:col-span-1">
+            <label htmlFor="zip-code" className="text-xs text-muted-foreground">
+              ZIP code
+            </label>
+            <input
+              id="zip-code"
+              type="text"
+              value={zipCode}
+              onChange={(e) => setZipCode(e.target.value)}
+              placeholder="e.g., 90210"
+              maxLength={10}
+              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            />
+          </div>
+        </div>
+        <div>
+          <label htmlFor="address" className="text-xs text-muted-foreground">
+            Service address
+          </label>
+          <input
+            id="address"
+            type="text"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder="e.g., 123 Main St, Apt 4B"
+            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+          />
+        </div>
       </div>
 
       <Button
