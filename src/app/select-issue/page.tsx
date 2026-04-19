@@ -43,6 +43,7 @@ export default async function SelectIssuePage({ searchParams }: SelectIssuePageP
 
       <SelectIssueForm
         ispSlug={ispRecord.slug}
+        ispName={ispRecord.name}
         categories={categories.map((c) => ({
           id: c.id,
           slug: c.slug,

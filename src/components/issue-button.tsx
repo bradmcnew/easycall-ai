@@ -1,6 +1,25 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import {
+  Receipt,
+  Wrench,
+  XCircle,
+  MessageCircle,
+  Truck,
+  RefreshCw,
+  type LucideIcon,
+} from "lucide-react";
+
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  billing: Receipt,
+  technical: Wrench,
+  cancellation: XCircle,
+  general: MessageCircle,
+  "moving-service": Truck,
+  "new-service": RefreshCw,
+  "plan-changes": RefreshCw,
+};
 
 interface IssueCategoryButtonProps {
   category: {
@@ -18,6 +37,8 @@ export function IssueCategoryButton({
   selected,
   onClick,
 }: IssueCategoryButtonProps) {
+  const Icon = CATEGORY_ICONS[category.slug] ?? MessageCircle;
+
   return (
     <button
       type="button"
@@ -31,12 +52,20 @@ export function IssueCategoryButton({
           : "border-input bg-background shadow-xs"
       )}
     >
-      <span className="block text-sm font-semibold">{category.label}</span>
-      {category.description && (
-        <span className="block text-xs text-muted-foreground">
-          {category.description}
-        </span>
-      )}
+      <div className="flex items-start gap-3">
+        <Icon className={cn(
+          "mt-0.5 h-4 w-4 shrink-0",
+          selected ? "text-primary" : "text-muted-foreground"
+        )} />
+        <div>
+          <span className="block text-sm font-semibold">{category.label}</span>
+          {category.description && (
+            <span className="block text-xs text-muted-foreground">
+              {category.description}
+            </span>
+          )}
+        </div>
+      </div>
     </button>
   );
 }
